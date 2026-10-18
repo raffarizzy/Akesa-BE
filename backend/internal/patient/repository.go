@@ -57,7 +57,9 @@ func (r *Repository) FindByUserID(
 			emergency_contact_name,
 			emergency_contact_phone,
 			created_at,
-			updated_at
+			updated_at,
+			identity_verification_status,
+			profile_completed
 		FROM patient_profiles
 		WHERE user_id = $1`,
 		userID,
@@ -87,7 +89,9 @@ func (r *Repository) FindByPatientCode(
 			emergency_contact_name,
 			emergency_contact_phone,
 			created_at,
-			updated_at
+			updated_at,
+			identity_verification_status,
+			profile_completed
 		FROM patient_profiles
 		WHERE patient_code = $1`,
 		patientCode,
@@ -117,7 +121,9 @@ func (r *Repository) FindByID(
 			emergency_contact_name,
 			emergency_contact_phone,
 			created_at,
-			updated_at
+			updated_at,
+			identity_verification_status,
+			profile_completed
 		FROM patient_profiles
 		WHERE id = $1`,
 		id,
@@ -445,6 +451,8 @@ func (r *Repository) scanRow(
 		&profile.EmergencyContactPhone,
 		&profile.CreatedAt,
 		&profile.UpdatedAt,
+		&profile.IdentityVerificationStatus,
+		&profile.ProfileCompleted,
 	)
 
 	if err != nil {

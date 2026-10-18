@@ -1,0 +1,109 @@
+services:
+  akesa-postgres:
+    image: postgres:16-alpine
+    container_name: akesa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: akesa
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-akesa}
+      POSTGRES_DB: akesa
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U akesa -d akesa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - akesa-net
+
+  akesa-blockchain:
+    build:
+      context: ./contracts
+      dockerfile: Dockerfile
+    container_name: akesa-blockchain
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8545:8545"
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    networks:
+      - akesa-net
+
+  akesa-ocr:
+    build:
+      context: ./ktp-ocr/ai-service
+      dockerfile: Dockerfile
+    container_name: akesa-ocr
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 450M
+    networks:
+      - akesa-net
+
+  akesa-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: akesa-backend
+    restart: unless-stopped
+    depends_on:
+      akesa-postgres:
+        condition: service_healthy
+      akesa-blockchain:
+        condition: service_started
+      akesa-ocr:
+        condition: service_started
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgresql://akesa:${DATABASE_PASSWORD:-akesa}@akesa-postgres:5432/akesa?sslmode=disable
+      - BLOCKCHAIN_RPC_URL=http://akesa-blockchain:8545
+      - BLOCKCHAIN_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+    volumes:
+      - identity_storage:/app/storage/identity
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+    networks:
+      - akesa-net
+
+  akesa-caddy:
+    image: caddy:2-alpine
+    container_name: akesa-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - akesa-backend
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+    networks:
+      - akesa-net
+
+volumes:
+  pg_data:
+  identity_storage:
+  caddy_data:
+  caddy_config:
+
+networks:
+  akesa-net:
+    driver: bridge

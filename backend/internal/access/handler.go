@@ -60,7 +60,8 @@ func (h *Handler) ListMine(w http.ResponseWriter, r *http.Request) {
 
 	requests, err := h.service.ListForPatient(r.Context(), authUser.ID)
 	if err != nil {
-		response.Error(w, http.StatusInternalServerError, "internal_server_error")
+		log.Printf("[access handler] ListMine failed for patient userID=%s (%s): %v", authUser.ID, authUser.Role, err)
+		h.writeServiceError(w, err)
 		return
 	}
 

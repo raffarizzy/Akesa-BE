@@ -114,7 +114,7 @@ func (s *Service) ListForPatient(ctx context.Context, userID uuid.UUID) ([]*Requ
 	patientProfile, err := s.patients.GetByUserID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, patient.ErrProfileNotFound) {
-			return nil, ErrPatientNotFound
+			return []*Request{}, nil
 		}
 		return nil, err
 	}

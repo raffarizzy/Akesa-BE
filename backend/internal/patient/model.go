@@ -15,23 +15,25 @@ const (
 )
 
 type Profile struct {
-	ID                    uuid.UUID `json:"id"`
-	UserID                uuid.UUID `json:"userId"`
-	PatientCode           string    `json:"patientCode"`
-	FullName              string    `json:"fullName"`
-	NIK                   string    `json:"nik"`
-	DateOfBirth           time.Time `json:"dateOfBirth"`
-	Gender                Gender    `json:"gender"`
-	PhoneNumber           string    `json:"phoneNumber"`
-	Address               string    `json:"address"`
-	BloodType             *string   `json:"bloodType,omitempty"`
-	DrugAllergy           *string   `json:"drugAllergy,omitempty"`
-	MedicalHistory        *string   `json:"medicalHistory,omitempty"`
-	InsuranceNumber       *string   `json:"insuranceNumber,omitempty"`
-	EmergencyContactName  *string   `json:"emergencyContactName,omitempty"`
-	EmergencyContactPhone *string   `json:"emergencyContactPhone,omitempty"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	ID                         uuid.UUID `json:"id"`
+	UserID                     uuid.UUID `json:"userId"`
+	PatientCode                string    `json:"patientCode"`
+	FullName                   string    `json:"fullName"`
+	NIK                        string    `json:"nik"`
+	DateOfBirth                time.Time `json:"dateOfBirth"`
+	Gender                     Gender    `json:"gender"`
+	PhoneNumber                string    `json:"phoneNumber"`
+	Address                    string    `json:"address"`
+	BloodType                  *string   `json:"bloodType,omitempty"`
+	DrugAllergy                *string   `json:"drugAllergy,omitempty"`
+	MedicalHistory             *string   `json:"medicalHistory,omitempty"`
+	InsuranceNumber            *string   `json:"insuranceNumber,omitempty"`
+	EmergencyContactName       *string   `json:"emergencyContactName,omitempty"`
+	EmergencyContactPhone      *string   `json:"emergencyContactPhone,omitempty"`
+	CreatedAt                  time.Time `json:"createdAt"`
+	UpdatedAt                  time.Time `json:"updatedAt"`
+	IdentityVerificationStatus string    `json:"identityVerificationStatus"`
+	ProfileCompleted           bool      `json:"profileCompleted"`
 }
 
 func (p *Profile) FilteredView(categories []datacategory.Category) map[string]any {
