@@ -58,7 +58,7 @@ jobs:
   deploy:
     name: Deploy to Debian VPS
     needs: [test-backend, test-contracts]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Execute Remote SSH Commands
