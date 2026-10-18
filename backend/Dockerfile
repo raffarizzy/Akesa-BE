@@ -19,10 +19,10 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
-
 # Create directory for patient identity storage
 RUN mkdir -p /app/storage/identity
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /app/bin/api /app/api
 COPY --from=builder /app/migrations /app/migrations

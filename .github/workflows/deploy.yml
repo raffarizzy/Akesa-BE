@@ -67,11 +67,18 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
             echo "🚀 Starting Deployment on VPS..."
             
+            # Pastikan Docker daemon memiliki DNS publik agar build container stabil
+            if [ ! -f /etc/docker/daemon.json ] || ! grep -q "dns" /etc/docker/daemon.json 2>/dev/null; then
+              echo '{"dns": ["8.8.8.8", "1.1.1.1"]}' > /etc/docker/daemon.json
+              systemctl restart docker || true
+            fi
+
             # Navigasi ke direktori project (sesuaikan jika berbeda)
             APP_DIR="${{ secrets.VPS_APP_DIR || '/root/Akesa' }}"
             if [ ! -d "$APP_DIR" ]; then
