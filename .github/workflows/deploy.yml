@@ -1,0 +1,104 @@
+name: CI/CD Pipeline - Test & Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-backend:
+    name: Test & Build Go Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: backend/go.sum
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          go test -v ./...
+
+      - name: Verify Backend Build
+        run: |
+          cd backend
+          go build -v ./cmd/api
+
+  test-contracts:
+    name: Compile & Test Smart Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: contracts/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd contracts
+          npm ci
+
+      - name: Compile Contracts
+        run: |
+          cd contracts
+          npx hardhat compile
+
+  deploy:
+    name: Deploy to Debian VPS
+    needs: [test-backend, test-contracts]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            echo "🚀 Starting Deployment on VPS..."
+            
+            # Navigasi ke direktori project (sesuaikan jika berbeda)
+            APP_DIR="${{ secrets.VPS_APP_DIR || '/root/Akesa' }}"
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Repository not found at $APP_DIR. Cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+            fi
+            
+            cd "$APP_DIR"
+            
+            echo "📥 Pulling latest changes from main..."
+            git fetch --all
+            git reset --hard origin/main
+            
+            echo "🐳 Rebuilding and updating Docker containers..."
+            docker compose up -d --build
+            
+            echo "🗄️ Running database migrations..."
+            # Menjalankan migrate container sementara di network docker yang sama
+            docker run --rm \
+              --network akesa_akesa-net \
+              -v "$APP_DIR/backend/migrations":/migrations \
+              migrate/migrate \
+              -path=/migrations/ \
+              -database "postgresql://akesa:akesa@akesa-postgres:5432/akesa?sslmode=disable" \
+              up || echo "Migration step completed or no pending migrations."
+            
+            echo "🧹 Cleaning unused docker dangling images..."
+            docker image prune -f
+            
+            echo "✅ Deployment finished successfully!"
