@@ -8,12 +8,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"ktp-ocr/backend/internal/client"
 	"ktp-ocr/backend/internal/handler"
 	"ktp-ocr/backend/internal/service"
 )
 
 func main() {
+	_ = godotenv.Load()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
