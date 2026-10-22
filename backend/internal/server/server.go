@@ -109,8 +109,35 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	s.mux.Handle("POST /api/v1/patient/identity/verifications/{id}/document",
 		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.UploadDocument), RolePatient),
 	)
+	s.mux.Handle("GET /api/v1/patient/identity/verifications/{id}/document",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetDocumentFilePatient), RolePatient),
+	)
 	s.mux.Handle("POST /api/v1/patient/identity/verifications/{id}/selfie",
 		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.UploadSelfie), RolePatient),
+	)
+	s.mux.Handle("GET /api/v1/patient/identity/verifications/{id}/selfie",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetSelfieFilePatient), RolePatient),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.ListVerifications), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetVerificationAdmin), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}/document",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetDocumentFileAdmin), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}/documents/ktp",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetDocumentFileAdmin), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}/documents/document",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetDocumentFileAdmin), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}/selfie",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetSelfieFileAdmin), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/identity-verifications/{id}/documents/selfie",
+		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.GetSelfieFileAdmin), RoleAdmin),
 	)
 	s.mux.Handle("POST /api/v1/admin/identity-verifications/{id}/approve",
 		s.chain(deps, http.HandlerFunc(deps.IdentityHandler.ApproveVerification), RoleAdmin),

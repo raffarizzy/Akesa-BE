@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/farhan-hamzah/Akesa/backend/internal/patient"
@@ -307,7 +308,11 @@ func (s *Service) ApproveVerification(
 		return nil, err
 	}
 
-	if verification.Status != StatusManualReview {
+	hasDocuments := verification.DocumentStorageKey != nil && strings.TrimSpace(*verification.DocumentStorageKey) != "" &&
+		verification.SelfieStorageKey != nil && strings.TrimSpace(*verification.SelfieStorageKey) != ""
+
+	if verification.Status != StatusManualReview &&
+		!(hasDocuments && (verification.Status == StatusPending || verification.Status == StatusProcessing)) {
 		return nil, ErrVerificationNotInReview
 	}
 
@@ -342,7 +347,11 @@ func (s *Service) RejectVerification(
 		return nil, err
 	}
 
-	if verification.Status != StatusManualReview {
+	hasDocuments := verification.DocumentStorageKey != nil && strings.TrimSpace(*verification.DocumentStorageKey) != "" &&
+		verification.SelfieStorageKey != nil && strings.TrimSpace(*verification.SelfieStorageKey) != ""
+
+	if verification.Status != StatusManualReview &&
+		!(hasDocuments && (verification.Status == StatusPending || verification.Status == StatusProcessing)) {
 		return nil, ErrVerificationNotInReview
 	}
 
@@ -397,4 +406,114 @@ func (s *Service) GetLatestVerification(
 	}
 
 	return verification, nil
+}
+
+func (s *Service) ListVerifications(
+	ctx context.Context,
+	status *VerificationStatus,
+) ([]*Verification, error) {
+	return s.repository.List(ctx, status)
+}
+
+func (s *Service) GetVerificationByID(
+	ctx context.Context,
+	verificationID uuid.UUID,
+) (*Verification, error) {
+	return s.repository.FindByID(ctx, verificationID)
+}
+
+func getContentType(key string) string {
+	lower := strings.ToLower(key)
+	switch {
+	case strings.HasSuffix(lower, ".jpg"), strings.HasSuffix(lower, ".jpeg"):
+		return "image/jpeg"
+	case strings.HasSuffix(lower, ".png"):
+		return "image/png"
+	case strings.HasSuffix(lower, ".pdf"):
+		return "application/pdf"
+	default:
+		return "application/octet-stream"
+	}
+}
+
+func (s *Service) GetDocumentFile(
+	ctx context.Context,
+	verificationID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	verification, err := s.repository.FindByID(ctx, verificationID)
+	if err != nil {
+		return nil, "", err
+	}
+	if verification.DocumentStorageKey == nil || strings.TrimSpace(*verification.DocumentStorageKey) == "" {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	rc, err := s.fileStorage.Open(ctx, *verification.DocumentStorageKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return rc, getContentType(*verification.DocumentStorageKey), nil
+}
+
+func (s *Service) GetSelfieFile(
+	ctx context.Context,
+	verificationID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	verification, err := s.repository.FindByID(ctx, verificationID)
+	if err != nil {
+		return nil, "", err
+	}
+	if verification.SelfieStorageKey == nil || strings.TrimSpace(*verification.SelfieStorageKey) == "" {
+		return nil, "", ErrSelfieNotUploaded
+	}
+
+	rc, err := s.fileStorage.Open(ctx, *verification.SelfieStorageKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return rc, getContentType(*verification.SelfieStorageKey), nil
+}
+
+func (s *Service) GetDocumentFileForPatient(
+	ctx context.Context,
+	userID uuid.UUID,
+	verificationID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	verification, err := s.GetVerification(ctx, userID, verificationID)
+	if err != nil {
+		return nil, "", err
+	}
+	if verification.DocumentStorageKey == nil || strings.TrimSpace(*verification.DocumentStorageKey) == "" {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	rc, err := s.fileStorage.Open(ctx, *verification.DocumentStorageKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return rc, getContentType(*verification.DocumentStorageKey), nil
+}
+
+func (s *Service) GetSelfieFileForPatient(
+	ctx context.Context,
+	userID uuid.UUID,
+	verificationID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	verification, err := s.GetVerification(ctx, userID, verificationID)
+	if err != nil {
+		return nil, "", err
+	}
+	if verification.SelfieStorageKey == nil || strings.TrimSpace(*verification.SelfieStorageKey) == "" {
+		return nil, "", ErrSelfieNotUploaded
+	}
+
+	rc, err := s.fileStorage.Open(ctx, *verification.SelfieStorageKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return rc, getContentType(*verification.SelfieStorageKey), nil
 }

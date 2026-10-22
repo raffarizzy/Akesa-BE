@@ -91,3 +91,31 @@ func (s *LocalStorage) Delete(
 
 	return nil
 }
+
+func (s *LocalStorage) Open(
+	ctx context.Context,
+	key string,
+) (io.ReadCloser, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	cleanKey := filepath.Clean(filepath.FromSlash(key))
+
+	if cleanKey == "." ||
+		strings.HasPrefix(cleanKey, ".."+string(os.PathSeparator)) ||
+		cleanKey == ".." {
+		return nil, fmt.Errorf("invalid storage key")
+	}
+
+	path := filepath.Join(s.root, cleanKey)
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open storage file: %w", err)
+	}
+
+	return file, nil
+}

@@ -1,11 +1,15 @@
-CREATE TYPE hospital_application_status AS ENUM (
-    'PENDING_REVIEW',
-    'REVISION_REQUIRED',
-    'REJECTED',
-    'APPROVED'
-);
+DO $$ BEGIN
+    CREATE TYPE hospital_application_status AS ENUM (
+        'PENDING_REVIEW',
+        'REVISION_REQUIRED',
+        'REJECTED',
+        'APPROVED'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE hospital_applications (
+CREATE TABLE IF NOT EXISTS hospital_applications (
     id UUID PRIMARY KEY,
     invitation_id UUID NOT NULL REFERENCES hospital_invitations(id),
     applicant_user_id UUID NOT NULL REFERENCES users(id),
@@ -27,5 +31,5 @@ CREATE TABLE hospital_applications (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_hospital_applications_applicant ON hospital_applications(applicant_user_id);
-CREATE INDEX idx_hospital_applications_status ON hospital_applications(status);
+CREATE INDEX IF NOT EXISTS idx_hospital_applications_applicant ON hospital_applications(applicant_user_id);
+CREATE INDEX IF NOT EXISTS idx_hospital_applications_status ON hospital_applications(status);

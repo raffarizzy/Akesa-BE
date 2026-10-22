@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,9 +20,9 @@ import (
 func main() {
 	_ = godotenv.Load()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	portEnv := os.Getenv("PORT")
+	if portEnv == "" {
+		portEnv = "9090,8081"
 	}
 
 	aiServiceURL := os.Getenv("AI_SERVICE_URL")
@@ -37,7 +40,7 @@ func main() {
 
 	log.Printf("==================================================")
 	log.Printf("KTP OCR Go Backend Service Starting...")
-	log.Printf("Port            : %s", port)
+	log.Printf("Port(s)         : %s", portEnv)
 	log.Printf("AI Service URL  : %s", aiServiceURL)
 	log.Printf("Request Timeout : %v", timeout)
 	log.Printf("==================================================")
@@ -70,9 +73,33 @@ func main() {
 		}
 	}
 
-	addr := fmt.Sprintf(":%s", port)
-	log.Printf("Go HTTP server listening on %s", addr)
-	if err := router.Run(addr); err != nil {
-		log.Fatalf("Server gagal dijalankan: %v", err)
+	ports := strings.Split(portEnv, ",")
+	var validPorts []string
+	for _, p := range ports {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			validPorts = append(validPorts, p)
+		}
 	}
+	if len(validPorts) == 0 {
+		validPorts = []string{"9090"}
+	}
+
+	var wg sync.WaitGroup
+	for _, p := range validPorts {
+		addr := fmt.Sprintf(":%s", p)
+		log.Printf("Go HTTP server listening on %s", addr)
+		wg.Add(1)
+		go func(listenAddr string) {
+			defer wg.Done()
+			srv := &http.Server{
+				Addr:    listenAddr,
+				Handler: router,
+			}
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Printf("Server on %s error: %v", listenAddr, err)
+			}
+		}(addr)
+	}
+	wg.Wait()
 }

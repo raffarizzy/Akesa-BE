@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/farhan-hamzah/Akesa/backend/internal/auth"
 	"github.com/farhan-hamzah/Akesa/backend/internal/patient"
@@ -156,6 +158,13 @@ func (h *Handler) writeServiceError(
 			"document_not_uploaded",
 		)
 
+	case errors.Is(err, ErrSelfieNotUploaded):
+		response.Error(
+			w,
+			http.StatusBadRequest,
+			"selfie_not_uploaded",
+		)
+
 	case errors.Is(err, ErrInvalidDocumentType):
 		response.Error(
 			w,
@@ -171,6 +180,7 @@ func (h *Handler) writeServiceError(
 		)
 
 	default:
+		log.Printf("[IdentityHandler] internal error: %v", err)
 		response.Error(
 			w,
 			http.StatusInternalServerError,
@@ -215,6 +225,53 @@ func toVerificationResponse(
 	}
 
 	return result
+}
+
+func toAdminVerificationResponse(
+	verification *Verification,
+) AdminVerificationResponse {
+	documentUploaded := verification.DocumentStorageKey != nil &&
+		strings.TrimSpace(*verification.DocumentStorageKey) != ""
+
+	selfieUploaded := verification.SelfieStorageKey != nil &&
+		strings.TrimSpace(*verification.SelfieStorageKey) != ""
+
+	resp := AdminVerificationResponse{
+		ID:                verification.ID.String(),
+		PatientID:         verification.PatientID.String(),
+		Status:            verification.Status,
+		DocumentType:      verification.DocumentType,
+		DocumentUploaded:  documentUploaded,
+		SelfieUploaded:    selfieUploaded,
+		ExtractedNIK:      verification.ExtractedNIK,
+		ExtractedFullName: verification.ExtractedFullName,
+		ExtractedGender:   verification.ExtractedGender,
+		DocumentStatus:    verification.DocumentStatus,
+		LivenessStatus:    verification.LivenessStatus,
+		FaceMatchStatus:   verification.FaceMatchStatus,
+		FaceMatchScore:    verification.FaceMatchScore,
+		Provider:          verification.Provider,
+		FailureReason:     verification.FailureReason,
+		CreatedAt:         verification.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:         verification.UpdatedAt.Format(time.RFC3339),
+	}
+
+	if verification.ExtractedDateOfBirth != nil {
+		dob := verification.ExtractedDateOfBirth.Format("2006-01-02")
+		resp.ExtractedDateOfBirth = &dob
+	}
+
+	if verification.VerifiedAt != nil {
+		vAt := verification.VerifiedAt.Format(time.RFC3339)
+		resp.VerifiedAt = &vAt
+	}
+
+	if verification.ExpiresAt != nil {
+		exp := verification.ExpiresAt.Format(time.RFC3339)
+		resp.ExpiresAt = &exp
+	}
+
+	return resp
 }
 
 func stringPtr(value string) *string {
@@ -473,7 +530,7 @@ func (h *Handler) UploadSelfie(
 		return
 	}
 
-	// 8. Kembalikan status verifikasi terbaru.
+	// Kembalikan status verifikasi terbaru.
 	response.JSON(
 		w,
 		http.StatusOK,
@@ -509,7 +566,7 @@ func (h *Handler) ApproveVerification(
 	response.JSON(
 		w,
 		http.StatusOK,
-		toVerificationResponse(verification),
+		toAdminVerificationResponse(verification),
 	)
 }
 
@@ -562,7 +619,7 @@ func (h *Handler) RejectVerification(
 	response.JSON(
 		w,
 		http.StatusOK,
-		toVerificationResponse(verification),
+		toAdminVerificationResponse(verification),
 	)
 }
 
@@ -595,4 +652,164 @@ func (h *Handler) GetLatestVerification(
 		http.StatusOK,
 		toVerificationResponse(verification),
 	)
+}
+
+// ListVerifications - GET /api/v1/admin/identity-verifications (role: ADMIN)
+func (h *Handler) ListVerifications(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	statusParam := r.URL.Query().Get("status")
+	var statusFilter *VerificationStatus
+
+	if statusParam != "" {
+		s := VerificationStatus(statusParam)
+		if !s.IsValid() {
+			response.Error(w, http.StatusBadRequest, "invalid_status_filter")
+			return
+		}
+		statusFilter = &s
+	}
+
+	verifications, err := h.service.ListVerifications(r.Context(), statusFilter)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+
+	resp := make([]AdminVerificationResponse, 0, len(verifications))
+	for _, v := range verifications {
+		resp = append(resp, toAdminVerificationResponse(v))
+	}
+
+	response.JSON(w, http.StatusOK, resp)
+}
+
+// GetVerificationAdmin - GET /api/v1/admin/identity-verifications/{id} (role: ADMIN)
+func (h *Handler) GetVerificationAdmin(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	id := r.PathValue("id")
+	verificationID, err := uuid.Parse(id)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_verification_id")
+		return
+	}
+
+	verification, err := h.service.GetVerificationByID(r.Context(), verificationID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, toAdminVerificationResponse(verification))
+}
+
+// GetDocumentFileAdmin - GET /api/v1/admin/identity-verifications/{id}/document (role: ADMIN)
+func (h *Handler) GetDocumentFileAdmin(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	id := r.PathValue("id")
+	verificationID, err := uuid.Parse(id)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_verification_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetDocumentFile(r.Context(), verificationID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
+// GetSelfieFileAdmin - GET /api/v1/admin/identity-verifications/{id}/selfie (role: ADMIN)
+func (h *Handler) GetSelfieFileAdmin(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	id := r.PathValue("id")
+	verificationID, err := uuid.Parse(id)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_verification_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetSelfieFile(r.Context(), verificationID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
+// GetDocumentFilePatient - GET /api/v1/patient/identity/verifications/{id}/document (role: PATIENT)
+func (h *Handler) GetDocumentFilePatient(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	authUser, ok := auth.GetAuthUser(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := r.PathValue("id")
+	verificationID, err := uuid.Parse(id)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_verification_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetDocumentFileForPatient(r.Context(), authUser.ID, verificationID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
+// GetSelfieFilePatient - GET /api/v1/patient/identity/verifications/{id}/selfie (role: PATIENT)
+func (h *Handler) GetSelfieFilePatient(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	authUser, ok := auth.GetAuthUser(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := r.PathValue("id")
+	verificationID, err := uuid.Parse(id)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_verification_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetSelfieFileForPatient(r.Context(), authUser.ID, verificationID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
 }

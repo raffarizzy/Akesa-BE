@@ -1,17 +1,25 @@
-CREATE TYPE notification_category AS ENUM (
-    'SECURITY_ALERT',
-    'ACCESS_REQUEST',
-    'HOSPITAL_LIFECYCLE',
-    'SYSTEM'
-);
+DO $$ BEGIN
+    CREATE TYPE notification_category AS ENUM (
+        'SECURITY_ALERT',
+        'ACCESS_REQUEST',
+        'HOSPITAL_LIFECYCLE',
+        'SYSTEM'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE notification_severity AS ENUM (
-    'INFO',
-    'WARNING',
-    'CRITICAL'
-);
+DO $$ BEGIN
+    CREATE TYPE notification_severity AS ENUM (
+        'INFO',
+        'WARNING',
+        'CRITICAL'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -25,10 +33,10 @@ CREATE TABLE notifications (
     read_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_notifications_user_created ON notifications(user_id, created_at DESC);
-CREATE INDEX idx_notifications_user_unread ON notifications(user_id) WHERE is_read = FALSE;
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id) WHERE is_read = FALSE;
 
-CREATE TABLE user_device_tokens (
+CREATE TABLE IF NOT EXISTS user_device_tokens (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token TEXT NOT NULL UNIQUE,
@@ -37,4 +45,4 @@ CREATE TABLE user_device_tokens (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_device_tokens_user ON user_device_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_device_tokens_user ON user_device_tokens(user_id);

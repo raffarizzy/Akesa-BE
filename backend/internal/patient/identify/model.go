@@ -20,6 +20,23 @@ const (
 	StatusExpired          VerificationStatus = "EXPIRED"
 )
 
+func (s VerificationStatus) IsValid() bool {
+	switch s {
+	case StatusPending,
+		StatusProcessing,
+		StatusDocumentRejected,
+		StatusDataMismatch,
+		StatusLivenessFailed,
+		StatusFaceMismatch,
+		StatusManualReview,
+		StatusVerified,
+		StatusExpired:
+		return true
+	default:
+		return false
+	}
+}
+
 type DocumentType string
 
 const (

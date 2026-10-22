@@ -108,6 +108,43 @@ func (r *Repository) FindByID(
 	return verification, nil
 }
 
+func (r *Repository) List(
+	ctx context.Context,
+	status *VerificationStatus,
+) ([]*Verification, error) {
+	query := `
+		SELECT ` + selectColumns + `
+		FROM identity_verifications
+	`
+	var args []any
+	if status != nil && *status != "" {
+		query += ` WHERE status = $1`
+		args = append(args, *status)
+	}
+	query += ` ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list identity verifications: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*Verification
+	for rows.Next() {
+		v := &Verification{}
+		if err := r.scanRow(rows, v); err != nil {
+			return nil, fmt.Errorf("scan identity verification row: %w", err)
+		}
+		results = append(results, v)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate identity verifications: %w", err)
+	}
+
+	return results, nil
+}
+
 func (r *Repository) FindLatestByPatientID(
 	ctx context.Context,
 	patientID uuid.UUID,
@@ -332,6 +369,7 @@ func (r *Repository) UpdateSelfie(
 		UPDATE identity_verifications
 		SET
 			selfie_storage_key = $2,
+			status = 'MANUAL_REVIEW',
 			liveness_status = $3,
 			updated_at = NOW()
 		WHERE id = $1
