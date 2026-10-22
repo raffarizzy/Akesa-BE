@@ -1,12 +1,14 @@
 package hospital
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/farhan-hamzah/Akesa/backend/internal/auth"
 	"github.com/farhan-hamzah/Akesa/backend/internal/response"
@@ -358,14 +360,15 @@ func (h *Handler) UploadDocument(w http.ResponseWriter, r *http.Request) {
 
 	contentType := http.DetectContentType(buffer[:n])
 	var extension string
-	switch contentType {
-	case "image/jpeg":
-		extension = ".jpg"
-	case "image/png":
-		extension = ".png"
-	case "application/pdf":
+	if contentType == "application/pdf" ||
+		bytes.Contains(buffer[:n], []byte("%PDF")) ||
+		strings.HasSuffix(strings.ToLower(header.Filename), ".pdf") {
 		extension = ".pdf"
-	default:
+	} else if contentType == "image/jpeg" {
+		extension = ".jpg"
+	} else if contentType == "image/png" {
+		extension = ".png"
+	} else {
 		response.Error(w, http.StatusUnsupportedMediaType, "unsupported_document_type")
 		return
 	}
@@ -407,6 +410,9 @@ func (h *Handler) GetMyApplicationDocument(w http.ResponseWriter, r *http.Reques
 	defer reader.Close()
 
 	w.Header().Set("Content-Type", contentType)
+	if contentType == "application/pdf" {
+		w.Header().Set("Content-Disposition", "inline; filename=\"dokumen_izin_operasional.pdf\"")
+	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.Copy(w, reader)
 }
@@ -427,6 +433,9 @@ func (h *Handler) GetApplicationDocumentAdmin(w http.ResponseWriter, r *http.Req
 	defer reader.Close()
 
 	w.Header().Set("Content-Type", contentType)
+	if contentType == "application/pdf" {
+		w.Header().Set("Content-Disposition", "inline; filename=\"dokumen_izin_operasional.pdf\"")
+	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.Copy(w, reader)
 }
@@ -447,6 +456,9 @@ func (h *Handler) GetHospitalDocumentAdmin(w http.ResponseWriter, r *http.Reques
 	defer reader.Close()
 
 	w.Header().Set("Content-Type", contentType)
+	if contentType == "application/pdf" {
+		w.Header().Set("Content-Disposition", "inline; filename=\"dokumen_izin_operasional.pdf\"")
+	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.Copy(w, reader)
 }

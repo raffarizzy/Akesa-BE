@@ -270,7 +270,20 @@ func (s *Server) wsChain(deps Dependencies, final http.Handler) http.Handler {
 }
 
 func (s *Server) chain(deps Dependencies, final http.Handler, roles ...string) http.Handler {
+	tokenFromQuery := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") == "" {
+				token := r.URL.Query().Get("token")
+				if token != "" {
+					r.Header.Set("Authorization", "Bearer "+token)
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	mws := []appmiddleware.Middleware{
+		tokenFromQuery,
 		auth.RequireAuth,
 		auth.WithUser(deps.UserLoader),
 	}
