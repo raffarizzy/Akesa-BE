@@ -231,6 +231,21 @@ func (s *Service) Revoke(ctx context.Context, patientUserID, requestID uuid.UUID
 		"patientId":  updated.PatientID.String(),
 		"hospitalId": updated.HospitalID.String(),
 	})
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyUser(ctx, updated.RequestedBy, notification.NotificationInput{
+			Title:     "Izin Akses Dicabut",
+			Message:   "Pasien telah mencabut izin akses rekam medis.",
+			Category:  notification.CategoryAccessRequest,
+			Severity:  notification.SeverityWarning,
+			ActionURL: "/hospital/access-requests",
+			Metadata: map[string]any{
+				"requestId": updated.ID.String(),
+				"patientId": updated.PatientID.String(),
+				"status":    "REVOKED",
+			},
+		})
+	}
 	return updated, nil
 }
 
