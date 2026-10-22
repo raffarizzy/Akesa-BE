@@ -110,6 +110,12 @@ jobs:
             echo "🐳 Rebuilding and updating Docker containers..."
             docker compose build --parallel=false
             docker compose up -d
+
+            echo "🔒 Ensuring firewall ports (80/443) are open and reloading Caddy for SSL..."
+            which ufw >/dev/null 2>&1 && ufw allow 80/tcp && ufw allow 443/tcp || true
+            docker compose restart akesa-caddy
+            sleep 4
+            docker logs akesa-caddy --tail 15 || true
             
             echo "🗄️ Running database migrations..."
             # Menjalankan migrate container sementara di network docker yang sama
