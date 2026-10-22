@@ -11,60 +11,26 @@
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+SET session_replication_role = 'replica';
 
--- Dumping structure for function public.rls_auto_enable
-DELIMITER //
-CREATE FUNCTION "rls_auto_enable"() RETURNS UNKNOWN AS $$ 
-DECLARE
-  cmd record;
-BEGIN
-  FOR cmd IN
-    SELECT *
-    FROM pg_event_trigger_ddl_commands()
-    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
-      AND object_type IN ('table','partitioned table')
-  LOOP
-     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
-      BEGIN
-        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
-        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
-      EXCEPTION
-        WHEN OTHERS THEN
-          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
-      END;
-     ELSE
-        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
-     END IF;
-  END LOOP;
-END;
- $$//
-DELIMITER ;
+-- Pastikan kolom verifikasi identitas dan tabel device token dibuat jika belum ada
+ALTER TABLE patient_profiles
+    ADD COLUMN IF NOT EXISTS identity_verification_status VARCHAR(20) NOT NULL DEFAULT 'NOT_VERIFIED',
+    ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN NOT NULL DEFAULT FALSE;
 
--- Dumping structure for table public.access_requests
-CREATE TABLE IF NOT EXISTS "access_requests" (
-	"id" UUID NOT NULL,
-	"hospital_id" UUID NOT NULL,
-	"patient_id" UUID NOT NULL,
-	"requested_by" UUID NOT NULL,
-	"purpose" TEXT NOT NULL,
-	"categories" UNKNOWN NOT NULL,
-	"status" VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-	"decided_at" TIMESTAMPTZ NULL DEFAULT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	INDEX "idx_access_requests_patient_id" ("patient_id"),
-	INDEX "idx_access_requests_hospital_id" ("hospital_id"),
-	INDEX "idx_access_requests_status" ("status"),
-	CONSTRAINT "access_requests_hospital_id_fkey" FOREIGN KEY ("hospital_id") REFERENCES "hospitals" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "access_requests_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "patient_profiles" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "access_requests_requested_by_fkey" FOREIGN KEY ("requested_by") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
+CREATE TABLE IF NOT EXISTS user_device_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    platform VARCHAR(20) NOT NULL DEFAULT 'android',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS idx_user_device_tokens_user ON user_device_tokens(user_id);
 
 -- Dumping data for table public.access_requests: -1 rows
 /*!40000 ALTER TABLE "access_requests" DISABLE KEYS */;
-REPLACE INTO "access_requests" ("id", "hospital_id", "patient_id", "requested_by", "purpose", "categories", "status", "decided_at", "created_at", "updated_at") VALUES
+INSERT INTO "access_requests" ("id", "hospital_id", "patient_id", "requested_by", "purpose", "categories", "status", "decided_at", "created_at", "updated_at") VALUES
 	('3efac1ba-5b4a-43bc-824b-eeb926209ddb', '85ce395a-541c-431d-b371-9286a86f6386', 'c6acab0f-8506-4f72-8a82-e19be15de335', '76568a30-17db-40ee-a4a3-04af16793773', 'Pemeriksaana pasien', '{IDENTITY,CONTACT,MEDICAL_BASIC}', 'REVOKED', '2026-10-08 05:44:39.509851+00', '2026-10-08 05:14:15.383579+00', '2026-10-08 10:19:39.721265+00'),
 	('66437ace-105e-4914-9e46-07dcf20ec31d', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'c497174e-2617-4b40-9869-80e4b778486e', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'nego 10k', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'PENDING', NULL, '2026-10-17 13:51:54.238433+00', '2026-10-17 13:51:54.238433+00'),
 	('7d678b60-5d32-4dc4-ab35-3739f5e2e847', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'kelas', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'REJECTED', '2026-10-22 02:25:06.530135+00', '2026-10-22 01:39:09.084574+00', '2026-10-22 02:24:25.479838+00'),
@@ -75,38 +41,15 @@ REPLACE INTO "access_requests" ("id", "hospital_id", "patient_id", "requested_by
 	('3b7561cd-c875-4935-91fd-7d786fb63f66', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'ga sopan lu ye amjng', '{IDENTITY}', 'APPROVED', '2026-10-22 03:57:32.647354+00', '2026-10-22 03:56:32.603881+00', '2026-10-22 03:56:51.571168+00');
 /*!40000 ALTER TABLE "access_requests" ENABLE KEYS */;
 
--- Dumping structure for table public.audit_chain_state
-CREATE TABLE IF NOT EXISTS "audit_chain_state" (
-	"chain_name" VARCHAR(50) NOT NULL,
-	"last_hash" VARCHAR(64) NOT NULL,
-	PRIMARY KEY ("chain_name")
-);
-
 -- Dumping data for table public.audit_chain_state: -1 rows
 /*!40000 ALTER TABLE "audit_chain_state" DISABLE KEYS */;
-REPLACE INTO "audit_chain_state" ("chain_name", "last_hash") VALUES
+INSERT INTO "audit_chain_state" ("chain_name", "last_hash") VALUES
 	('global', '7e826e47ca49fdb1c23a1ede187e12456b103d0ad25e0c68fb043cef8142d787');
 /*!40000 ALTER TABLE "audit_chain_state" ENABLE KEYS */;
 
--- Dumping structure for table public.audit_logs
-CREATE TABLE IF NOT EXISTS "audit_logs" (
-	"id" UUID NOT NULL,
-	"entity_type" VARCHAR(50) NOT NULL,
-	"entity_id" UUID NOT NULL,
-	"action" VARCHAR(50) NOT NULL,
-	"actor_id" UUID NOT NULL,
-	"payload" JSONB NOT NULL DEFAULT '{}',
-	"prev_hash" VARCHAR(64) NOT NULL,
-	"hash" VARCHAR(64) NOT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	INDEX "idx_audit_logs_entity" ("entity_type", "entity_id"),
-	INDEX "idx_audit_logs_created_at" ("created_at")
-);
-
 -- Dumping data for table public.audit_logs: -1 rows
 /*!40000 ALTER TABLE "audit_logs" DISABLE KEYS */;
-REPLACE INTO "audit_logs" ("id", "entity_type", "entity_id", "action", "actor_id", "payload", "prev_hash", "hash", "created_at") VALUES
+INSERT INTO "audit_logs" ("id", "entity_type", "entity_id", "action", "actor_id", "payload", "prev_hash", "hash", "created_at") VALUES
 	('f61cbba4-996e-40b2-ad2e-4d26b1297b44', 'PATIENT_PROFILE', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'PROFILE_UPDATED', 'c6acab0f-8506-4f72-8a82-e19be15de335', '{"profileHash": "0865878564c8ce24943219abf43686cb0bb383eeb5e8e8e019e002b3a73c5213"}', '0000000000000000000000000000000000000000000000000000000000000', 'e985274695f3b373039e315aedf1c34b872078940a962d424f90f00a55668340', '2026-09-22 13:54:46.95829+00'),
 	('af2d14f6-6083-4305-a91d-891bf0da41f7', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'ACCESS_REQUESTED', '76568a30-17db-40ee-a4a3-04af16793773', '{"categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC"], "hospitalId": "85ce395a-541c-431d-b371-9286a86f6386"}', 'e985274695f3b373039e315aedf1c34b872078940a962d424f90f00a55668340', '9811edbf0ad76234a3de8f4c2b9328afe9a1d3cd966888b5d09ad770ab14bafa', '2026-10-08 05:14:14.58933+00'),
 	('feb12886-a6be-4ae4-8ffe-776f9f9db196', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'ACCESS_APPROVED', '40551d73-8ad5-43f4-a4dd-c44f046718d0', '{"categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC"]}', '9811edbf0ad76234a3de8f4c2b9328afe9a1d3cd966888b5d09ad770ab14bafa', '7f1724fbe19e782b970d0962e9bbaa1329967153794f0907b24fa2bfc4a7db09', '2026-10-08 05:44:39.95499+00'),
@@ -151,152 +94,36 @@ REPLACE INTO "audit_logs" ("id", "entity_type", "entity_id", "action", "actor_id
 	('0de0751f-bcb1-4d9e-b849-33c21d8f75de', 'ACCESS_REQUEST', '3b7561cd-c875-4935-91fd-7d786fb63f66', 'DATA_ACCESSED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"dataHash": "156ebc5857d6f80876078dc72960c8c6e329518e8a4c38c60ef7a59ca372372f", "patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2648528df72adc9a51d8976eb3c365a6c980e778c64b63ee04f95a5876e2e6b9', '7e826e47ca49fdb1c23a1ede187e12456b103d0ad25e0c68fb043cef8142d787', '2026-10-22 03:57:36.032146+00');
 /*!40000 ALTER TABLE "audit_logs" ENABLE KEYS */;
 
--- Dumping structure for table public.hospitals
-CREATE TABLE IF NOT EXISTS "hospitals" (
-	"id" UUID NOT NULL,
-	"name" VARCHAR(255) NOT NULL,
-	"address" TEXT NOT NULL,
-	"phone" VARCHAR(50) NOT NULL,
-	"email" VARCHAR(255) NOT NULL,
-	"registration_number" VARCHAR(100) NOT NULL,
-	"status" VARCHAR(30) NOT NULL DEFAULT 'PENDING',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"npwp" VARCHAR(30) NULL DEFAULT NULL,
-	"license_document_url" TEXT NULL DEFAULT NULL,
-	"pic_user_id" UUID NULL DEFAULT NULL,
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "hospitals_email_key" ("email"),
-	UNIQUE INDEX "hospitals_registration_number_key" ("registration_number"),
-	INDEX "idx_hospitals_status" ("status"),
-	INDEX "idx_hospitals_pic_user_id" ("pic_user_id"),
-	CONSTRAINT "hospitals_pic_user_id_fkey" FOREIGN KEY ("pic_user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
-);
-
 -- Dumping data for table public.hospitals: 1 rows
 /*!40000 ALTER TABLE "hospitals" DISABLE KEYS */;
-REPLACE INTO "hospitals" ("id", "name", "address", "phone", "email", "registration_number", "status", "created_at", "updated_at", "npwp", "license_document_url", "pic_user_id") VALUES
+INSERT INTO "hospitals" ("id", "name", "address", "phone", "email", "registration_number", "status", "created_at", "updated_at", "npwp", "license_document_url", "pic_user_id") VALUES
 	('85ce395a-541c-431d-b371-9286a86f6386', 'RS Telkom Medika', 'Gedung Business Center, Jl. Telekomunikasi, Sukapura, Dayeuhkolot, Bandung Regency, West Java 40257', '081111500115', 'admin@telkommedika.id', 'RS-2026-001', 'ACTIVE', '2026-09-12 12:01:51.046007+00', '2026-09-12 12:03:29.595756+00', NULL, NULL, NULL),
 	('e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'Hari Tanpa Badai', 'Jl. hujan orang mati no 3', '022123456780', 'serapuhlarik@yopmail.com', 'RS-1293829', 'ACTIVE', '2026-10-17 13:48:44.07238+00', '2026-10-17 13:48:44.07238+00', '01.23984.123.123', 'youtube.com', 'c673f68f-10a2-4792-a4b2-3109d866e4fe');
 /*!40000 ALTER TABLE "hospitals" ENABLE KEYS */;
 
--- Dumping structure for table public.hospital_applications
-CREATE TABLE IF NOT EXISTS "hospital_applications" (
-	"id" UUID NOT NULL,
-	"invitation_id" UUID NOT NULL,
-	"applicant_user_id" UUID NOT NULL,
-	"name" VARCHAR(255) NOT NULL,
-	"address" TEXT NOT NULL,
-	"phone" VARCHAR(50) NOT NULL,
-	"email" VARCHAR(255) NOT NULL,
-	"registration_number" VARCHAR(100) NOT NULL,
-	"npwp" VARCHAR(30) NULL DEFAULT NULL,
-	"license_document_url" TEXT NULL DEFAULT NULL,
-	"pic_full_name" VARCHAR(255) NOT NULL,
-	"pic_position" VARCHAR(100) NOT NULL,
-	"status" UNKNOWN NOT NULL DEFAULT 'PENDING_REVIEW',
-	"admin_notes" TEXT NULL DEFAULT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	INDEX "idx_hospital_applications_applicant" ("applicant_user_id"),
-	INDEX "idx_hospital_applications_status" ("status"),
-	CONSTRAINT "hospital_applications_applicant_user_id_fkey" FOREIGN KEY ("applicant_user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
-	CONSTRAINT "hospital_applications_invitation_id_fkey" FOREIGN KEY ("invitation_id") REFERENCES "hospital_invitations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
-
 -- Dumping data for table public.hospital_applications: -1 rows
 /*!40000 ALTER TABLE "hospital_applications" DISABLE KEYS */;
-REPLACE INTO "hospital_applications" ("id", "invitation_id", "applicant_user_id", "name", "address", "phone", "email", "registration_number", "npwp", "license_document_url", "pic_full_name", "pic_position", "status", "admin_notes", "created_at", "updated_at") VALUES
+INSERT INTO "hospital_applications" ("id", "invitation_id", "applicant_user_id", "name", "address", "phone", "email", "registration_number", "npwp", "license_document_url", "pic_full_name", "pic_position", "status", "admin_notes", "created_at", "updated_at") VALUES
 	('cbd07e81-30b7-4e09-ad54-05922fa4e43c', '639a2167-79fb-4fea-a15a-b683587ac911', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Hari Tanpa Badai', 'Jl. hujan orang mati no 3', '022123456780', 'serapuhlarik@yopmail.com', 'RS-1293829', '01.23984.123.123', 'youtube.com', 'Lidah Berduri', 'Ketua Suku', 'APPROVED', '', '2026-10-17 13:47:44.251895+00', '2026-10-17 13:48:44.07238+00');
 /*!40000 ALTER TABLE "hospital_applications" ENABLE KEYS */;
 
--- Dumping structure for table public.hospital_invitations
-CREATE TABLE IF NOT EXISTS "hospital_invitations" (
-	"id" UUID NOT NULL,
-	"key_code" VARCHAR(64) NOT NULL,
-	"target_email" VARCHAR(255) NOT NULL,
-	"created_by" UUID NOT NULL,
-	"used_by" UUID NULL DEFAULT NULL,
-	"is_used" BOOLEAN NOT NULL DEFAULT 'false',
-	"expires_at" TIMESTAMPTZ NOT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "hospital_invitations_key_code_key" ("key_code"),
-	INDEX "idx_hospital_invitations_key_code" ("key_code"),
-	INDEX "idx_hospital_invitations_target_email" ("target_email"),
-	CONSTRAINT "hospital_invitations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "hospital_invitations_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
-);
-
 -- Dumping data for table public.hospital_invitations: -1 rows
 /*!40000 ALTER TABLE "hospital_invitations" DISABLE KEYS */;
-REPLACE INTO "hospital_invitations" ("id", "key_code", "target_email", "created_by", "used_by", "is_used", "expires_at", "created_at", "updated_at") VALUES
+INSERT INTO "hospital_invitations" ("id", "key_code", "target_email", "created_by", "used_by", "is_used", "expires_at", "created_at", "updated_at") VALUES
 	('68140ec5-cf68-4911-9bac-361b9b8b123f', 'AKESA-UAMZ-76ZU', 'kitaakanterbakar@yopmail.com', 'c462e808-6c73-4f69-a9a3-d7a1192a237a', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'true', '2026-10-20 12:00:09.047362+00', '2026-10-17 12:00:09.047362+00', '2026-10-17 12:21:35.56741+00'),
 	('639a2167-79fb-4fea-a15a-b683587ac911', 'AKESA-CEC6-LLUF', 'serapuhlarik@yopmail.com', 'c462e808-6c73-4f69-a9a3-d7a1192a237a', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'true', '2026-10-20 13:40:56.177092+00', '2026-10-17 13:40:56.177092+00', '2026-10-17 13:47:44.251895+00');
 /*!40000 ALTER TABLE "hospital_invitations" ENABLE KEYS */;
 
--- Dumping structure for table public.hospital_staff
-CREATE TABLE IF NOT EXISTS "hospital_staff" (
-	"id" UUID NOT NULL,
-	"user_id" UUID NOT NULL,
-	"hospital_id" UUID NOT NULL,
-	"full_name" VARCHAR(255) NOT NULL,
-	"position" VARCHAR(100) NOT NULL DEFAULT '',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "hospital_staff_user_id_key" ("user_id"),
-	INDEX "idx_hospital_staff_hospital_id" ("hospital_id"),
-	CONSTRAINT "hospital_staff_hospital_id_fkey" FOREIGN KEY ("hospital_id") REFERENCES "hospitals" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "hospital_staff_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 -- Dumping data for table public.hospital_staff: -1 rows
 /*!40000 ALTER TABLE "hospital_staff" DISABLE KEYS */;
-REPLACE INTO "hospital_staff" ("id", "user_id", "hospital_id", "full_name", "position", "created_at", "updated_at") VALUES
+INSERT INTO "hospital_staff" ("id", "user_id", "hospital_id", "full_name", "position", "created_at", "updated_at") VALUES
 	('93233718-c615-48a5-b16a-3c9767323227', '76568a30-17db-40ee-a4a3-04af16793773', '85ce395a-541c-431d-b371-9286a86f6386', 'Bala Lazuardi', 'Petugas Pendaftaran', '2026-09-12 12:05:37.538202+00', '2026-09-12 12:05:37.538202+00'),
 	('f28f474a-f8ee-4ea1-a491-4f4e9ec06cd8', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'Lidah Berduri', 'Ketua Suku', '2026-10-17 13:48:44.07238+00', '2026-10-17 13:48:44.07238+00');
 /*!40000 ALTER TABLE "hospital_staff" ENABLE KEYS */;
 
--- Dumping structure for table public.identity_verifications
-CREATE TABLE IF NOT EXISTS "identity_verifications" (
-	"id" UUID NOT NULL,
-	"patient_id" UUID NOT NULL,
-	"status" VARCHAR(30) NOT NULL DEFAULT 'PENDING',
-	"document_type" VARCHAR(30) NOT NULL DEFAULT 'KTP',
-	"document_storage_key" TEXT NULL DEFAULT NULL,
-	"extracted_nik" TEXT NULL DEFAULT NULL,
-	"extracted_full_name" TEXT NULL DEFAULT NULL,
-	"extracted_date_of_birth" DATE NULL DEFAULT NULL,
-	"extracted_gender" VARCHAR(10) NULL DEFAULT NULL,
-	"document_status" VARCHAR(30) NULL DEFAULT NULL,
-	"liveness_status" VARCHAR(30) NULL DEFAULT NULL,
-	"face_match_status" VARCHAR(30) NULL DEFAULT NULL,
-	"face_match_score" NUMERIC(5,4) NULL DEFAULT NULL,
-	"provider" VARCHAR(50) NULL DEFAULT NULL,
-	"provider_reference" VARCHAR(255) NULL DEFAULT NULL,
-	"failure_reason" VARCHAR(100) NULL DEFAULT NULL,
-	"verified_at" TIMESTAMPTZ NULL DEFAULT NULL,
-	"expires_at" TIMESTAMPTZ NULL DEFAULT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"selfie_storage_key" TEXT NULL DEFAULT NULL,
-	PRIMARY KEY ("id"),
-	INDEX "idx_identity_verifications_patient_id" ("patient_id"),
-	INDEX "idx_identity_verifications_status" ("status"),
-	INDEX "idx_identity_verifications_expires_at" ("expires_at"),
-	INDEX "idx_identity_verifications_provider_reference" ("provider_reference"),
-	CONSTRAINT "identity_verifications_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "patient_profiles" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "identity_verifications_document_type_check" CHECK (((document_type)::text = 'KTP'::text)),
-	CONSTRAINT "identity_verifications_face_match_score_check" CHECK (((face_match_score IS NULL) OR ((face_match_score >= (0)::numeric) AND (face_match_score <= (1)::numeric)))),
-	CONSTRAINT "identity_verifications_status_check" CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'PROCESSING'::character varying, 'DOCUMENT_REJECTED'::character varying, 'DATA_MISMATCH'::character varying, 'LIVENESS_FAILED'::character varying, 'FACE_MISMATCH'::character varying, 'MANUAL_REVIEW'::character varying, 'VERIFIED'::character varying, 'EXPIRED'::character varying])::text[])))
-);
-
 -- Dumping data for table public.identity_verifications: -1 rows
 /*!40000 ALTER TABLE "identity_verifications" DISABLE KEYS */;
-REPLACE INTO "identity_verifications" ("id", "patient_id", "status", "document_type", "document_storage_key", "extracted_nik", "extracted_full_name", "extracted_date_of_birth", "extracted_gender", "document_status", "liveness_status", "face_match_status", "face_match_score", "provider", "provider_reference", "failure_reason", "verified_at", "expires_at", "created_at", "updated_at", "selfie_storage_key") VALUES
+INSERT INTO "identity_verifications" ("id", "patient_id", "status", "document_type", "document_storage_key", "extracted_nik", "extracted_full_name", "extracted_date_of_birth", "extracted_gender", "document_status", "liveness_status", "face_match_status", "face_match_score", "provider", "provider_reference", "failure_reason", "verified_at", "expires_at", "created_at", "updated_at", "selfie_storage_key") VALUES
 	('05ebea76-4a78-433b-acc4-b09c13f0d125', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'EXPIRED', 'KTP', 'identity/c6acab0f-8506-4f72-8a82-e19be15de335/05ebea76-4a78-433b-acc4-b09c13f0d125/0b208ae6-a370-4229-8de3-4b105e194cb6.jpg', NULL, NULL, NULL, NULL, NULL, 'MANUAL_REVIEW', NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-29 13:59:11.12121+00', '2026-09-29 13:44:11.246665+00', '2026-10-01 12:24:06.532567+00', 'identity/c6acab0f-8506-4f72-8a82-e19be15de335/05ebea76-4a78-433b-acc4-b09c13f0d125/selfie/b52e7c0b-8f75-492a-b9fe-5c3b41b22f43.jpg'),
 	('ead79621-0d09-4b09-a526-644e8582b513', 'c497174e-2617-4b40-9869-80e4b778486e', 'EXPIRED', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-17 10:24:20.144706+00', '2026-10-17 10:08:42.833287+00', '2026-10-17 11:44:31.926286+00', NULL),
 	('4811e3d3-eab7-451d-8eae-961b9919a4f9', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'EXPIRED', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-08 10:49:25.058573+00', '2026-10-08 10:34:27.291143+00', '2026-10-17 12:51:13.776638+00', NULL),
@@ -305,28 +132,9 @@ REPLACE INTO "identity_verifications" ("id", "patient_id", "status", "document_t
 	('6694be18-432a-492a-b802-f570f05b1f1a', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'EXPIRED', 'KTP', 'identity/32bd2ed5-1904-4bed-877c-932d93ec1cd3/6694be18-432a-492a-b802-f570f05b1f1a/0805371d-f950-469e-9a3f-1694b833265e.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-20 16:14:25.152424+00', '2026-10-20 15:58:46.41792+00', '2026-10-21 18:21:13.807038+00', NULL);
 /*!40000 ALTER TABLE "identity_verifications" ENABLE KEYS */;
 
--- Dumping structure for table public.notifications
-CREATE TABLE IF NOT EXISTS "notifications" (
-	"id" UUID NOT NULL,
-	"user_id" UUID NOT NULL,
-	"title" VARCHAR(255) NOT NULL,
-	"message" TEXT NOT NULL,
-	"category" UNKNOWN NOT NULL DEFAULT 'SYSTEM',
-	"severity" UNKNOWN NOT NULL DEFAULT 'INFO',
-	"is_read" BOOLEAN NOT NULL DEFAULT 'false',
-	"action_url" VARCHAR(255) NULL DEFAULT NULL,
-	"metadata" JSONB NOT NULL DEFAULT '{}',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"read_at" TIMESTAMPTZ NULL DEFAULT NULL,
-	PRIMARY KEY ("id"),
-	INDEX "idx_notifications_user_created" ("user_id", "created_at"),
-	INDEX "idx_notifications_user_unread" ("user_id"),
-	CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 -- Dumping data for table public.notifications: -1 rows
 /*!40000 ALTER TABLE "notifications" DISABLE KEYS */;
-REPLACE INTO "notifications" ("id", "user_id", "title", "message", "category", "severity", "is_read", "action_url", "metadata", "created_at", "read_at") VALUES
+INSERT INTO "notifications" ("id", "user_id", "title", "message", "category", "severity", "is_read", "action_url", "metadata", "created_at", "read_at") VALUES
 	('264caf88-9468-44df-a0d2-e59682991966', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "apa ini masih ada ?", "requestId": "d5385ff0-05e2-41dc-bbd1-b0299318c82d", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-17 13:56:58.685151+00', '2026-10-22 01:12:14.516986+00'),
 	('09d5d349-b99c-4a8b-a675-5f61fa198c26', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "nego 10k", "requestId": "66437ace-105e-4914-9e46-07dcf20ec31d", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-17 13:52:32.384647+00', '2026-10-22 01:32:13.323648+00'),
 	('46033e46-7c31-4fe7-aa51-06301bebbeff', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "kelas", "requestId": "7d678b60-5d32-4dc4-ab35-3739f5e2e847", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 01:39:51.169492+00', '2026-10-22 02:25:17.351369+00'),
@@ -347,41 +155,9 @@ REPLACE INTO "notifications" ("id", "user_id", "title", "message", "category", "
 	('565c46a6-df82-4377-a55c-360b0b354191', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Disetujui', 'Pasien telah menyetujui permintaan akses rekam medis.', 'ACCESS_REQUEST', 'INFO', 'false', '/hospital/access-requests/3b7561cd-c875-4935-91fd-7d786fb63f66/data', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "3b7561cd-c875-4935-91fd-7d786fb63f66"}', '2026-10-22 03:57:33.225393+00', NULL);
 /*!40000 ALTER TABLE "notifications" ENABLE KEYS */;
 
--- Dumping structure for table public.patient_profiles
-CREATE TABLE IF NOT EXISTS "patient_profiles" (
-	"id" UUID NOT NULL,
-	"user_id" UUID NOT NULL,
-	"patient_code" VARCHAR(20) NOT NULL,
-	"full_name" VARCHAR(255) NOT NULL,
-	"nik" TEXT NOT NULL,
-	"date_of_birth" DATE NOT NULL,
-	"gender" VARCHAR(10) NOT NULL,
-	"phone_number" VARCHAR(30) NOT NULL,
-	"address" TEXT NOT NULL,
-	"blood_type" VARCHAR(5) NULL DEFAULT NULL,
-	"insurance_number" TEXT NULL DEFAULT NULL,
-	"emergency_contact_name" TEXT NULL DEFAULT NULL,
-	"emergency_contact_phone" TEXT NULL DEFAULT NULL,
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"nik_hash" VARCHAR(64) NOT NULL,
-	"drug_allergy" TEXT NULL DEFAULT NULL,
-	"medical_history" TEXT NULL DEFAULT NULL,
-	"identity_verification_status" TEXT NULL DEFAULT 'NOT_VERIFIED',
-	"profile_completed" BOOLEAN NULL DEFAULT 'false',
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "patient_profiles_user_id_key" ("user_id"),
-	UNIQUE INDEX "patient_profiles_patient_code_key" ("patient_code"),
-	INDEX "idx_patient_profiles_patient_code" ("patient_code"),
-	UNIQUE INDEX "patient_profiles_nik_hash_key" ("nik_hash"),
-	INDEX "idx_patient_profiles_nik_hash" ("nik_hash"),
-	CONSTRAINT "patient_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
-	CONSTRAINT "patient_profiles_blood_type_check" CHECK (((blood_type IS NULL) OR ((blood_type)::text = ANY ((ARRAY['A+'::character varying, 'A-'::character varying, 'B+'::character varying, 'B-'::character varying, 'AB+'::character varying, 'AB-'::character varying, 'O+'::character varying, 'O-'::character varying])::text[]))))
-);
-
 -- Dumping data for table public.patient_profiles: -1 rows
 /*!40000 ALTER TABLE "patient_profiles" DISABLE KEYS */;
-REPLACE INTO "patient_profiles" ("id", "user_id", "patient_code", "full_name", "nik", "date_of_birth", "gender", "phone_number", "address", "blood_type", "insurance_number", "emergency_contact_name", "emergency_contact_phone", "created_at", "updated_at", "nik_hash", "drug_allergy", "medical_history", "identity_verification_status", "profile_completed") VALUES
+INSERT INTO "patient_profiles" ("id", "user_id", "patient_code", "full_name", "nik", "date_of_birth", "gender", "phone_number", "address", "blood_type", "insurance_number", "emergency_contact_name", "emergency_contact_phone", "created_at", "updated_at", "nik_hash", "drug_allergy", "medical_history", "identity_verification_status", "profile_completed") VALUES
 	('c6acab0f-8506-4f72-8a82-e19be15de335', '40551d73-8ad5-43f4-a4dd-c44f046718d0', 'AKS-dca183a1', 'Bala Lazuardi', 'vJpL/mAIhiFpv6pBd0vhuoyyJNgTFj6+sBNZEO0Duybf3Ip3Sd2nmaC6ozA=', '1998-06-12', 'MALE', '081234567890', 'Jl. Telekomunikasi, Bandung', NULL, NULL, NULL, NULL, '2026-09-22 13:54:45.41624+00', '2026-10-08 06:20:14.963843+00', '1ce6d61b4be8574dca383e02e5962f5a8ea0dc72d85d9e7e13fe3aac661b0754', NULL, NULL, 'VERIFIED', 'true'),
 	('c497174e-2617-4b40-9869-80e4b778486e', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'AKS-26c96248', 'Lidah Berduri', '+2/yReDoswNaCjw22H+9byAdIXWdIYYF7VPs6EUR8rz5N81WZQi15FR6Ep0=', '2006-01-19', 'MALE', '081238198212', 'jl hujan orang mati no 3', 'A+', NULL, NULL, NULL, '2026-10-17 09:38:24.964553+00', '2026-10-17 10:05:47.31761+00', 'cee95f043da7bfa74c6b4013ee2728917be0535fc9b3444292754ea5de58a9d3', 'qcIindxEOuHS4pajswROESnUHWjbusWznlhTLf9Wlg==', 'PgFchxANpif+LMEeLQev0FNtuWL0dyUzidR2QoNKHA4muI6B7VA=', 'VERIFIED', 'true'),
 	('8c8278e0-0328-4af9-8870-b2bddaf3a715', 'dd740439-4db2-4bb5-a399-8f19fe8963c9', 'AKS-40e07ab9', 'SUTOMO', 'n4f0ladoqud6WT74PaSNiUJcphMZyx+aH++Mu1ilgf5hnSzicLGbcqeGIK8=', '1981-04-12', 'MALE', '083150751937', 'JL.BERUANG NO2, RT/RW 001/002, Kec. CIPUTAT', 'A+', 'XNUhSSB4cl/SH4DeTSGwzYy7x48Jn/MfeoHe73u5sj/fYSMDJlO24Qk=', NULL, NULL, '2026-10-21 16:25:51.57498+00', '2026-10-21 16:52:18.685793+00', '58d3fbc250951e83da7362147b1dff5f9731263a772776c80bf4fa1cdb592c5c', 'Q7ho/xQ6jmBdQuXzPGULArgxJtjlr1iTbc1eCus93Hlt9k6hb2dGgelmg1d0h6XRow==', 'qch8jIPmjzZKtGm0srLRbaKiwtk6vbRhcgrfsftWXJ6ATrAhc45PgjbMi26Qjpv0jxXMJy0vlDvpfqreUw==', 'NOT_VERIFIED', 'false'),
@@ -390,58 +166,20 @@ REPLACE INTO "patient_profiles" ("id", "user_id", "patient_code", "full_name", "
 	('32bd2ed5-1904-4bed-877c-932d93ec1cd3', '4735141b-6c04-4df4-8312-d61b351eea9d', 'AKS-87b49af3', 'YAZIDUL FAHIMI', 'WZ03XnA0A3S6EERMWtiP0r1tgRGxOroB3KrWQrnt9bbYLm7UHwbJj3srZ04=', '1992-10-12', 'MALE', '0810293011123', 'PULAUTIDUNG, RT/RW 005/002, Kel. PULAUTIDUNG, Kec. KEPULAUANSERIBUSELATAN', NULL, NULL, NULL, NULL, '2026-10-20 15:58:35.512361+00', '2026-10-22 04:18:29.94343+00', '21e9b240dcd67787ac901a021ad65452c372f83d5f9acf4a9884d3963b6276d3', NULL, NULL, 'NOT_VERIFIED', 'false');
 /*!40000 ALTER TABLE "patient_profiles" ENABLE KEYS */;
 
--- Dumping structure for table public.patient_qr_credentials
-CREATE TABLE IF NOT EXISTS "patient_qr_credentials" (
-	"id" UUID NOT NULL DEFAULT 'gen_random_uuid()',
-	"user_id" UUID NOT NULL,
-	"display_code" VARCHAR(32) NOT NULL,
-	"token_hash" VARCHAR(64) NOT NULL,
-	"is_active" BOOLEAN NOT NULL DEFAULT 'true',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	INDEX "idx_patient_qr_token_hash" ("token_hash"),
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "patient_qr_credentials_user_id_key" ("user_id"),
-	UNIQUE INDEX "patient_qr_credentials_display_code_key" ("display_code"),
-	UNIQUE INDEX "patient_qr_credentials_token_hash_key" ("token_hash"),
-	INDEX "idx_patient_qr_user_id" ("user_id"),
-	CONSTRAINT "patient_qr_credentials_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 -- Dumping data for table public.patient_qr_credentials: -1 rows
 /*!40000 ALTER TABLE "patient_qr_credentials" DISABLE KEYS */;
-REPLACE INTO "patient_qr_credentials" ("id", "user_id", "display_code", "token_hash", "is_active", "created_at", "updated_at") VALUES
+INSERT INTO "patient_qr_credentials" ("id", "user_id", "display_code", "token_hash", "is_active", "created_at", "updated_at") VALUES
 	('17ab866f-1c58-4810-a656-cbe65f8c1a9c', '40551d73-8ad5-43f4-a4dd-c44f046718d0', '65F7CFFA', 'b361bab29d3a1b08f1c498832bbdbb22631cd607327f8476a6730db43dd36068', 'true', '2026-09-23 15:06:19.242158+00', '2026-10-08 10:20:01.27562+00');
 /*!40000 ALTER TABLE "patient_qr_credentials" ENABLE KEYS */;
 
--- Dumping structure for table public.schema_migrations
-CREATE TABLE IF NOT EXISTS "schema_migrations" (
-	"version" BIGINT NOT NULL,
-	"dirty" BOOLEAN NOT NULL,
-	PRIMARY KEY ("version")
-);
-
 -- Dumping data for table public.schema_migrations: -1 rows
-/*!40000 ALTER TABLE "schema_migrations" DISABLE KEYS */;
-REPLACE INTO "schema_migrations" ("version", "dirty") VALUES
-	(13, 'false');
+DELETE FROM "schema_migrations";
+INSERT INTO "schema_migrations" ("version", "dirty") VALUES (14, 'false');
 /*!40000 ALTER TABLE "schema_migrations" ENABLE KEYS */;
-
--- Dumping structure for table public.users
-CREATE TABLE IF NOT EXISTS "users" (
-	"id" UUID NOT NULL,
-	"clerk_user_id" VARCHAR(255) NOT NULL,
-	"role" VARCHAR(30) NOT NULL,
-	"status" VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "users_clerk_user_id_key" ("clerk_user_id")
-);
 
 -- Dumping data for table public.users: -1 rows
 /*!40000 ALTER TABLE "users" DISABLE KEYS */;
-REPLACE INTO "users" ("id", "clerk_user_id", "role", "status", "created_at", "updated_at") VALUES
+INSERT INTO "users" ("id", "clerk_user_id", "role", "status", "created_at", "updated_at") VALUES
 	('76a3916b-ebf3-4221-8c30-60b646b8cc47', 'user_3IRmuwqtYLPkOaHzI2N6OX2QtsB', 'ADMIN', 'ACTIVE', '2026-09-12 11:21:38.431286+00', '2026-09-12 11:21:38.431286+00'),
 	('40551d73-8ad5-43f4-a4dd-c44f046718d0', 'user_3IaWnMdZ4ZX8DTeFYHEXvwyHb9u', 'PATIENT', 'ACTIVE', '2026-09-12 11:26:20.672214+00', '2026-09-12 11:26:20.672214+00'),
 	('76568a30-17db-40ee-a4a3-04af16793773', 'user_3IaWzgsGnLN5L0xcHnJFxTlrlVs', 'HOSPITAL_STAFF', 'ACTIVE', '2026-09-12 11:30:25.693088+00', '2026-09-12 12:05:37.727098+00'),
@@ -453,23 +191,9 @@ REPLACE INTO "users" ("id", "clerk_user_id", "role", "status", "created_at", "up
 	('25c6b317-38b3-4105-97ff-a29039c31918', 'user_3L0r4nY3GSLwVPK37qO545ONeDI', 'PATIENT', 'ACTIVE', '2026-10-21 16:53:59.236636+00', '2026-10-21 16:53:59.236636+00');
 /*!40000 ALTER TABLE "users" ENABLE KEYS */;
 
--- Dumping structure for table public.user_device_tokens
-CREATE TABLE IF NOT EXISTS "user_device_tokens" (
-	"id" UUID NOT NULL,
-	"user_id" UUID NOT NULL,
-	"token" TEXT NOT NULL,
-	"platform" VARCHAR(20) NOT NULL DEFAULT 'android',
-	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
-	PRIMARY KEY ("id"),
-	UNIQUE INDEX "user_device_tokens_token_key" ("token"),
-	INDEX "idx_user_device_tokens_user" ("user_id"),
-	CONSTRAINT "user_device_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 -- Dumping data for table public.user_device_tokens: -1 rows
 /*!40000 ALTER TABLE "user_device_tokens" DISABLE KEYS */;
-REPLACE INTO "user_device_tokens" ("id", "user_id", "token", "platform", "created_at", "updated_at") VALUES
+INSERT INTO "user_device_tokens" ("id", "user_id", "token", "platform", "created_at", "updated_at") VALUES
 	('2ae11d9d-388c-4cdf-8d27-ceff3cbbe73b', '4735141b-6c04-4df4-8312-d61b351eea9d', 'fnghJvM8RKW4XhZBMuJFeR:APA91bH9i5juTeC0ZdKYcnpzKPgg6_cS2QmvXqib3hJH3iV9enuqhLCkdEd9fmggjtGFRqdtNIezIBE60qUjjkW43RpTC53TFaj4OxJz1DcdoirelfY8_9s', 'android', '2026-10-22 01:06:44.857295+00', '2026-10-22 04:43:59.386201+00');
 /*!40000 ALTER TABLE "user_device_tokens" ENABLE KEYS */;
 
@@ -478,3 +202,6 @@ REPLACE INTO "user_device_tokens" ("id", "user_id", "token", "platform", "create
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
+SET session_replication_role = 'origin';
+
