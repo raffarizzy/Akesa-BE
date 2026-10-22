@@ -16,4 +16,7 @@ var (
 	ErrApplicationNotRevisionRequired  = errors.New("hospital application does not require revision")
 	ErrApplicationAlreadyFinalized     = errors.New("hospital application has already been finalized (approved or rejected)")
 	ErrApplicationAlreadyPendingReview = errors.New("hospital application is already pending review")
+	ErrDocumentNotUploaded             = errors.New("hospital license document has not been uploaded")
+	ErrInvalidDocumentType             = errors.New("unsupported hospital document type")
+	ErrDocumentTooLarge                = errors.New("hospital document file is too large")
 )

@@ -90,8 +90,13 @@ func main() {
 	patientQRService := patientqr.NewService(patientQRRepository)
 	patientQRHandler := patientqr.NewHandler(patientQRService)
 
+	hospitalStorage, err := storage.NewLocalStorage("storage/hospitals")
+	if err != nil {
+		log.Fatalf("failed to initialize hospital storage: %v", err)
+	}
 	hospitalRepository := hospital.NewRepository(db)
 	hospitalService := hospital.NewService(hospitalRepository, userService, cfg.MagicLinkBaseURL)
+	hospitalService.SetStorage(hospitalStorage)
 	hospitalHandler := hospital.NewHandler(hospitalService)
 
 	accessRepository := access.NewRepository(db)
@@ -107,12 +112,15 @@ func main() {
 	notificationService := notification.NewService(notificationRepo, pushClient)
 	notificationHandler := notification.NewHandler(notificationService)
 	accessService.SetNotifier(notificationService)
+	identityService.SetNotifier(notificationService)
+	hospitalService.SetNotifier(notificationService)
 
 	// Inisialisasi Real-time WebSocket Hub
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 	wsHandler := ws.NewHandler(wsHub)
 	notificationService.SetBroadcaster(wsHub)
+	auditService.SetBroadcaster(wsHub)
 
 	appServer := server.New(server.Dependencies{
 		UserLoader:          userService,

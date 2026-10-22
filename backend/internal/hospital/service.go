@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"io"
 	"math/big"
 	"strings"
 	"time"
 
+	"github.com/farhan-hamzah/Akesa/backend/internal/notification"
+	"github.com/farhan-hamzah/Akesa/backend/internal/patient/storage"
 	"github.com/google/uuid"
 )
 
@@ -19,6 +22,8 @@ type Service struct {
 	repository       *Repository
 	users            UserRoleUpdater
 	magicLinkBaseURL string
+	notifier         notification.Notifier
+	storage          storage.FileStorage
 }
 
 func NewService(repository *Repository, users UserRoleUpdater, magicLinkBaseURL string) *Service {
@@ -30,6 +35,122 @@ func NewService(repository *Repository, users UserRoleUpdater, magicLinkBaseURL 
 		users:            users,
 		magicLinkBaseURL: strings.TrimRight(magicLinkBaseURL, "/"),
 	}
+}
+
+func (s *Service) SetNotifier(notifier notification.Notifier) {
+	s.notifier = notifier
+}
+
+func (s *Service) SetStorage(st storage.FileStorage) {
+	s.storage = st
+}
+
+func detectDocumentContentType(key string) string {
+	lower := strings.ToLower(strings.TrimSpace(key))
+	switch {
+	case strings.HasSuffix(lower, ".png"):
+		return "image/png"
+	case strings.HasSuffix(lower, ".pdf"):
+		return "application/pdf"
+	default:
+		return "image/jpeg"
+	}
+}
+
+func (s *Service) UploadLicenseDocument(
+	ctx context.Context,
+	userID uuid.UUID,
+	reader io.Reader,
+	extension string,
+) (string, error) {
+	if s.storage == nil {
+		return "", fmt.Errorf("hospital storage is not configured")
+	}
+
+	key := fmt.Sprintf("%s/license_%s%s", userID.String(), uuid.New().String(), extension)
+	if err := s.storage.Upload(ctx, key, reader); err != nil {
+		return "", err
+	}
+
+	return key, nil
+}
+
+func (s *Service) GetMyApplicationDocumentFile(
+	ctx context.Context,
+	userID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	if s.storage == nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	app, err := s.repository.FindApplicationByApplicantID(ctx, userID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	docKey := strings.TrimSpace(app.LicenseDocumentURL)
+	if docKey == "" || strings.HasPrefix(strings.ToLower(docKey), "http://") || strings.HasPrefix(strings.ToLower(docKey), "https://") {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	reader, err := s.storage.Open(ctx, docKey)
+	if err != nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	return reader, detectDocumentContentType(docKey), nil
+}
+
+func (s *Service) GetApplicationDocumentFile(
+	ctx context.Context,
+	appID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	if s.storage == nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	app, err := s.repository.FindApplicationByID(ctx, appID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	docKey := strings.TrimSpace(app.LicenseDocumentURL)
+	if docKey == "" || strings.HasPrefix(strings.ToLower(docKey), "http://") || strings.HasPrefix(strings.ToLower(docKey), "https://") {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	reader, err := s.storage.Open(ctx, docKey)
+	if err != nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	return reader, detectDocumentContentType(docKey), nil
+}
+
+func (s *Service) GetHospitalDocumentFile(
+	ctx context.Context,
+	hospitalID uuid.UUID,
+) (io.ReadCloser, string, error) {
+	if s.storage == nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	h, err := s.repository.FindByID(ctx, hospitalID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	docKey := strings.TrimSpace(h.LicenseDocumentURL)
+	if docKey == "" || strings.HasPrefix(strings.ToLower(docKey), "http://") || strings.HasPrefix(strings.ToLower(docKey), "https://") {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	reader, err := s.storage.Open(ctx, docKey)
+	if err != nil {
+		return nil, "", ErrDocumentNotUploaded
+	}
+
+	return reader, detectDocumentContentType(docKey), nil
 }
 
 func (s *Service) Create(ctx context.Context, in HospitalInput) (*Hospital, error) {
@@ -164,7 +285,27 @@ func (s *Service) RegisterWithKey(ctx context.Context, userID uuid.UUID, req Reg
 		return nil, err
 	}
 
-	return s.repository.CreateApplicationTx(ctx, keyCode, in, userID, picPos, picName)
+	app, err := s.repository.CreateApplicationTx(ctx, keyCode, in, userID, picPos, picName)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyRole(ctx, "ADMIN", notification.NotificationInput{
+			Title:     "Pengajuan Kemitraan RS Baru",
+			Message:   fmt.Sprintf("Rumah sakit %s mengajukan pendaftaran mitra untuk ditinjau.", app.Name),
+			Category:  notification.CategoryHospitalLifecycle,
+			Severity:  notification.SeverityInfo,
+			ActionURL: "/admin/hospital-applications",
+			Metadata: map[string]any{
+				"type":          "HOSPITAL_APPLICATION",
+				"applicationId": app.ID.String(),
+				"status":        string(app.Status),
+			},
+		})
+	}
+
+	return app, nil
 }
 
 // GetMyApplication returns the most recent hospital application submitted by the logged-in user.
@@ -179,7 +320,27 @@ func (s *Service) ResubmitApplication(ctx context.Context, userID uuid.UUID, req
 		return nil, err
 	}
 
-	return s.repository.UpdateApplicationContentTx(ctx, userID, in, picPos, picName)
+	app, err := s.repository.UpdateApplicationContentTx(ctx, userID, in, picPos, picName)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyRole(ctx, "ADMIN", notification.NotificationInput{
+			Title:     "Revisi Pengajuan Kemitraan RS",
+			Message:   fmt.Sprintf("Rumah sakit %s telah mengirimkan revisi pengajuan kemitraan.", app.Name),
+			Category:  notification.CategoryHospitalLifecycle,
+			Severity:  notification.SeverityInfo,
+			ActionURL: "/admin/hospital-applications",
+			Metadata: map[string]any{
+				"type":          "HOSPITAL_APPLICATION",
+				"applicationId": app.ID.String(),
+				"status":        string(app.Status),
+			},
+		})
+	}
+
+	return app, nil
 }
 
 // ListApplications returns all hospital applications, optionally filtered by status (Admin).
@@ -198,7 +359,28 @@ func (s *Service) RequestRevision(ctx context.Context, id uuid.UUID, notes strin
 	if notes == "" {
 		return nil, fieldErr("notes", "catatan revisi wajib diisi")
 	}
-	return s.repository.UpdateApplicationStatus(ctx, id, ApplicationRevisionRequired, notes)
+	app, err := s.repository.UpdateApplicationStatus(ctx, id, ApplicationRevisionRequired, notes)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyUser(ctx, app.ApplicantUserID, notification.NotificationInput{
+			Title:     "Pengajuan Kemitraan Perlu Revisi",
+			Message:   fmt.Sprintf("Pengajuan kemitraan %s memerlukan revisi: %s", app.Name, notes),
+			Category:  notification.CategoryHospitalLifecycle,
+			Severity:  notification.SeverityWarning,
+			ActionURL: "/hospital/application-status",
+			Metadata: map[string]any{
+				"type":          "HOSPITAL_APPLICATION",
+				"applicationId": app.ID.String(),
+				"status":        string(app.Status),
+				"notes":         notes,
+			},
+		})
+	}
+
+	return app, nil
 }
 
 // RejectApplication transitions an application to REJECTED with reason notes.
@@ -207,7 +389,28 @@ func (s *Service) RejectApplication(ctx context.Context, id uuid.UUID, reason st
 	if reason == "" {
 		return nil, fieldErr("notes", "alasan penolakan wajib diisi")
 	}
-	return s.repository.UpdateApplicationStatus(ctx, id, ApplicationRejected, reason)
+	app, err := s.repository.UpdateApplicationStatus(ctx, id, ApplicationRejected, reason)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyUser(ctx, app.ApplicantUserID, notification.NotificationInput{
+			Title:     "Pengajuan Kemitraan Ditolak",
+			Message:   fmt.Sprintf("Pengajuan kemitraan %s ditolak. Alasan: %s", app.Name, reason),
+			Category:  notification.CategoryHospitalLifecycle,
+			Severity:  notification.SeverityWarning,
+			ActionURL: "/hospital/application-status",
+			Metadata: map[string]any{
+				"type":          "HOSPITAL_APPLICATION",
+				"applicationId": app.ID.String(),
+				"status":        string(app.Status),
+				"reason":        reason,
+			},
+		})
+	}
+
+	return app, nil
 }
 
 // ApproveApplication approves an application, copies it to hospitals table as ACTIVE,
@@ -221,6 +424,22 @@ func (s *Service) ApproveApplication(ctx context.Context, id uuid.UUID) (*Hospit
 	// Promote applicant user to HOSPITAL_STAFF upon approval
 	if s.users != nil {
 		_ = s.users.UpdateRole(ctx, app.ApplicantUserID, "HOSPITAL_STAFF")
+	}
+
+	if s.notifier != nil {
+		_ = s.notifier.NotifyUser(ctx, app.ApplicantUserID, notification.NotificationInput{
+			Title:     "Pengajuan Kemitraan Disetujui",
+			Message:   fmt.Sprintf("Selamat! Pengajuan kemitraan %s telah disetujui dan akun Anda kini aktif sebagai Petugas RS.", app.Name),
+			Category:  notification.CategoryHospitalLifecycle,
+			Severity:  notification.SeverityInfo,
+			ActionURL: "/hospital/home",
+			Metadata: map[string]any{
+				"type":          "HOSPITAL_APPLICATION",
+				"applicationId": app.ID.String(),
+				"hospitalId":    h.ID.String(),
+				"status":        "APPROVED",
+			},
+		})
 	}
 
 	return h, nil

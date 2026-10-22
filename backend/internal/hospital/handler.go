@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/farhan-hamzah/Akesa/backend/internal/response"
 	"github.com/google/uuid"
 )
+
+const maxHospitalDocumentSize = 10 * 1024 * 1024
 
 type Handler struct {
 	service *Service
@@ -320,6 +323,134 @@ func (h *Handler) ApproveApplication(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, hospitalRecord)
 }
 
+// UploadDocument - POST /api/v1/hospitals/documents (role: any synced user)
+func (h *Handler) UploadDocument(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.GetAuthUser(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxHospitalDocumentSize)
+
+	file, header, err := r.FormFile("document")
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "document_file_required")
+		return
+	}
+	defer file.Close()
+
+	if header.Size > maxHospitalDocumentSize {
+		response.Error(w, http.StatusRequestEntityTooLarge, "document_too_large")
+		return
+	}
+
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		response.Error(w, http.StatusBadRequest, "failed_to_read_document")
+		return
+	}
+	if n == 0 {
+		response.Error(w, http.StatusBadRequest, "empty_document")
+		return
+	}
+
+	contentType := http.DetectContentType(buffer[:n])
+	var extension string
+	switch contentType {
+	case "image/jpeg":
+		extension = ".jpg"
+	case "image/png":
+		extension = ".png"
+	case "application/pdf":
+		extension = ".pdf"
+	default:
+		response.Error(w, http.StatusUnsupportedMediaType, "unsupported_document_type")
+		return
+	}
+
+	seeker, ok := file.(io.Seeker)
+	if !ok {
+		response.Error(w, http.StatusInternalServerError, "document_not_seekable")
+		return
+	}
+	if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+		response.Error(w, http.StatusInternalServerError, "failed_to_reset_document")
+		return
+	}
+
+	storageKey, err := h.service.UploadLicenseDocument(r.Context(), authUser.ID, file, extension)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]string{
+		"licenseDocumentUrl": storageKey,
+	})
+}
+
+// GetMyApplicationDocument - GET /api/v1/hospitals/my-application/document (role: any synced user)
+func (h *Handler) GetMyApplicationDocument(w http.ResponseWriter, r *http.Request) {
+	authUser, ok := auth.GetAuthUser(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	reader, contentType, err := h.service.GetMyApplicationDocumentFile(r.Context(), authUser.ID)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
+// GetApplicationDocumentAdmin - GET /api/v1/admin/hospital-applications/{id}/document (role: ADMIN)
+func (h *Handler) GetApplicationDocumentAdmin(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_application_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetApplicationDocumentFile(r.Context(), id)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
+// GetHospitalDocumentAdmin - GET /api/v1/admin/hospitals/{id}/document (role: ADMIN)
+func (h *Handler) GetHospitalDocumentAdmin(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid_hospital_id")
+		return
+	}
+
+	reader, contentType, err := h.service.GetHospitalDocumentFile(r.Context(), id)
+	if err != nil {
+		h.writeServiceError(w, err)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
+}
+
 func (h *Handler) writeServiceError(w http.ResponseWriter, err error) {
 	var valErr *ValidationError
 	if errors.As(err, &valErr) {
@@ -352,6 +483,12 @@ func (h *Handler) writeServiceError(w http.ResponseWriter, err error) {
 		response.Error(w, http.StatusConflict, "application_already_finalized")
 	case errors.Is(err, ErrApplicationAlreadyPendingReview):
 		response.Error(w, http.StatusBadRequest, "application_already_pending_review")
+	case errors.Is(err, ErrDocumentNotUploaded):
+		response.Error(w, http.StatusNotFound, "document_not_uploaded")
+	case errors.Is(err, ErrInvalidDocumentType):
+		response.Error(w, http.StatusUnsupportedMediaType, "unsupported_document_type")
+	case errors.Is(err, ErrDocumentTooLarge):
+		response.Error(w, http.StatusRequestEntityTooLarge, "document_too_large")
 	default:
 		log.Printf("[hospital handler] unexpected error: %v", err)
 		response.Error(w, http.StatusInternalServerError, "internal_server_error")

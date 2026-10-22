@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/farhan-hamzah/Akesa/backend/internal/notification"
 	"github.com/farhan-hamzah/Akesa/backend/internal/patient"
 	"github.com/farhan-hamzah/Akesa/backend/internal/patient/storage"
 	"github.com/google/uuid"
@@ -20,12 +21,17 @@ type PatientProfileFinder interface {
 		ctx context.Context,
 		userID uuid.UUID,
 	) (*patient.Profile, error)
+	GetByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) (*patient.Profile, error)
 }
 
 type Service struct {
 	repository    *Repository
 	patientFinder PatientProfileFinder
 	fileStorage   storage.FileStorage
+	notifier      notification.Notifier
 }
 
 func NewService(
@@ -38,6 +44,10 @@ func NewService(
 		patientFinder: patientFinder,
 		fileStorage:   fileStorage,
 	}
+}
+
+func (s *Service) SetNotifier(notifier notification.Notifier) {
+	s.notifier = notifier
 }
 
 func (s *Service) CreateVerification(
@@ -295,6 +305,21 @@ func (s *Service) UploadSelfie(
 		)
 	}
 
+	if s.notifier != nil {
+		_ = s.notifier.NotifyRole(ctx, "ADMIN", notification.NotificationInput{
+			Title:     "Pengajuan Verifikasi Identitas Baru",
+			Message:   "Seorang pasien telah mengunggah KTP dan swafoto untuk ditinjau.",
+			Category:  notification.CategorySystem,
+			Severity:  notification.SeverityInfo,
+			ActionURL: "/admin/identity-verifications",
+			Metadata: map[string]any{
+				"type":           "IDENTITY_VERIFICATION",
+				"verificationId": updated.ID.String(),
+				"status":         string(updated.Status),
+			},
+		})
+	}
+
 	return updated, nil
 }
 
@@ -328,6 +353,23 @@ func (s *Service) ApproveVerification(
 		now,
 	); err != nil {
 		return nil, err
+	}
+
+	if s.notifier != nil && s.patientFinder != nil {
+		if profile, pErr := s.patientFinder.GetByID(ctx, verification.PatientID); pErr == nil && profile != nil {
+			_ = s.notifier.NotifyUser(ctx, profile.UserID, notification.NotificationInput{
+				Title:     "Verifikasi KTP Disetujui",
+				Message:   "Identitas Anda telah berhasil diverifikasi. Kode unik pasien dan QR kini aktif.",
+				Category:  notification.CategorySystem,
+				Severity:  notification.SeverityInfo,
+				ActionURL: "/patient/profile",
+				Metadata: map[string]any{
+					"type":           "IDENTITY_VERIFICATION",
+					"verificationId": verification.ID.String(),
+					"status":         string(StatusVerified),
+				},
+			})
+		}
 	}
 
 	return verification, nil
@@ -365,6 +407,24 @@ func (s *Service) RejectVerification(
 		reason,
 	); err != nil {
 		return nil, err
+	}
+
+	if s.notifier != nil && s.patientFinder != nil {
+		if profile, pErr := s.patientFinder.GetByID(ctx, verification.PatientID); pErr == nil && profile != nil {
+			_ = s.notifier.NotifyUser(ctx, profile.UserID, notification.NotificationInput{
+				Title:     "Verifikasi KTP Ditolak",
+				Message:   fmt.Sprintf("Pengajuan verifikasi KTP Anda ditolak. Alasan: %s", reason),
+				Category:  notification.CategorySystem,
+				Severity:  notification.SeverityWarning,
+				ActionURL: "/patient/profile",
+				Metadata: map[string]any{
+					"type":           "IDENTITY_VERIFICATION",
+					"verificationId": verification.ID.String(),
+					"status":         string(StatusDocumentRejected),
+					"reason":         reason,
+				},
+			})
+		}
 	}
 
 	return verification, nil

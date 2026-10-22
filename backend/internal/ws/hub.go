@@ -1,4 +1,4 @@
-﻿package ws
+package ws
 
 import (
 	"encoding/json"
@@ -185,5 +185,32 @@ func (h *Hub) BroadcastToUser(userID uuid.UUID, event string, data map[string]an
 	h.broadcast <- broadcastMessage{
 		userID: userID,
 		data:   bytes,
+	}
+}
+
+func (h *Hub) BroadcastAll(event string, data map[string]any) {
+	msg := RealtimeMessage{
+		Event:     event,
+		Data:      data,
+		Timestamp: time.Now().Unix(),
+	}
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("[ws] marshal error: %v", err)
+		return
+	}
+
+	h.mu.RLock()
+	userIDs := make([]uuid.UUID, 0, len(h.clients))
+	for uid := range h.clients {
+		userIDs = append(userIDs, uid)
+	}
+	h.mu.RUnlock()
+
+	for _, uid := range userIDs {
+		h.broadcast <- broadcastMessage{
+			userID: uid,
+			data:   bytes,
+		}
 	}
 }

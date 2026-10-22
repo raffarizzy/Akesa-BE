@@ -80,8 +80,14 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	s.mux.Handle("POST /api/v1/hospitals/register",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.RegisterWithKey)),
 	)
+	s.mux.Handle("POST /api/v1/hospitals/documents",
+		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.UploadDocument)),
+	)
 	s.mux.Handle("GET /api/v1/hospitals/my-application",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.GetMyApplication)),
+	)
+	s.mux.Handle("GET /api/v1/hospitals/my-application/document",
+		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.GetMyApplicationDocument)),
 	)
 	s.mux.Handle("PUT /api/v1/hospitals/my-application",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.ResubmitApplication)),
@@ -175,6 +181,9 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	s.mux.Handle("GET /api/v1/admin/hospitals",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.List), RoleAdmin),
 	)
+	s.mux.Handle("GET /api/v1/admin/hospitals/{id}/document",
+		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.GetHospitalDocumentAdmin), RoleAdmin),
+	)
 	s.mux.Handle("PATCH /api/v1/admin/hospitals/{id}/verify",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.Verify), RoleAdmin),
 	)
@@ -195,6 +204,9 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	)
 	s.mux.Handle("GET /api/v1/admin/hospital-applications/{id}",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.GetApplication), RoleAdmin),
+	)
+	s.mux.Handle("GET /api/v1/admin/hospital-applications/{id}/document",
+		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.GetApplicationDocumentAdmin), RoleAdmin),
 	)
 	s.mux.Handle("POST /api/v1/admin/hospital-applications/{id}/request-revision",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.RequestRevision), RoleAdmin),

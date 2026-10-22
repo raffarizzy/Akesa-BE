@@ -11,9 +11,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type Broadcaster interface {
+	BroadcastAll(event string, data map[string]any)
+}
+
 type Service struct {
-	repository *Repository
-	bcClient   blockchain.Client
+	repository  *Repository
+	bcClient    blockchain.Client
+	broadcaster Broadcaster
 }
 
 func NewService(repository *Repository, bcClient blockchain.Client) *Service {
@@ -21,6 +26,10 @@ func NewService(repository *Repository, bcClient blockchain.Client) *Service {
 		repository: repository,
 		bcClient:   bcClient,
 	}
+}
+
+func (s *Service) SetBroadcaster(broadcaster Broadcaster) {
+	s.broadcaster = broadcaster
 }
 
 func (s *Service) Append(
@@ -36,7 +45,21 @@ func (s *Service) Append(
 		return nil, fmt.Errorf("marshal audit payload: %w", err)
 	}
 
-	return s.repository.InsertWithChain(ctx, entityType, entityID, action, actorID, data)
+	entry, err := s.repository.InsertWithChain(ctx, entityType, entityID, action, actorID, data)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.broadcaster != nil {
+		s.broadcaster.BroadcastAll("audit_updated", map[string]any{
+			"id":         entry.ID.String(),
+			"entityType": entityType,
+			"entityId":   entityID.String(),
+			"action":     action,
+		})
+	}
+
+	return entry, nil
 }
 
 func (s *Service) RecordProfileHash(ctx context.Context, patientID uuid.UUID, profileHash string) error {
