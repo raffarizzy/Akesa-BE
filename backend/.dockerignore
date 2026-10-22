@@ -1,0 +1,9 @@
+.git
+.env*
+storage/
+bin/
+*.exe
+*.sql
+*.tar
+*.gz
+*.log
