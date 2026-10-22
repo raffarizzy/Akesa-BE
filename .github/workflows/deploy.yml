@@ -75,9 +75,9 @@ jobs:
             set -e
             echo "🚀 Starting Deployment on VPS..."
             
-            # Pastikan Docker daemon memiliki DNS publik agar build container stabil
-            if [ ! -f /etc/docker/daemon.json ] || ! grep -q "dns" /etc/docker/daemon.json 2>/dev/null; then
-              echo '{"dns": ["8.8.8.8", "1.1.1.1"]}' > /etc/docker/daemon.json
+            # Pastikan Docker daemon memiliki DNS publik dan MTU 1400 agar koneksi HTTPS/TLS stabil
+            if ! grep -q "1400" /etc/docker/daemon.json 2>/dev/null; then
+              echo '{"dns": ["8.8.8.8", "1.1.1.1"], "mtu": 1400}' > /etc/docker/daemon.json
               systemctl restart docker || true
             fi
 
@@ -108,7 +108,7 @@ jobs:
             git reset --hard origin/main
             
             echo "🐳 Rebuilding and updating Docker containers..."
-            docker compose build
+            docker compose build --parallel=false
             docker compose up -d
             
             echo "🗄️ Running database migrations..."

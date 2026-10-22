@@ -5,9 +5,12 @@ WORKDIR /app
 
 RUN apk add --no-cache git ca-certificates
 
+# Set global mirror and fallback to prevent TLS handshake timeouts on VPS
+ENV GOPROXY=https://goproxy.io,https://proxy.golang.org,direct
+
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
+    go mod download || (sleep 3 && go mod download)
 
 COPY . .
 
