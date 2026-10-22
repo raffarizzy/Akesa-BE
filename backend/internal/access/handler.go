@@ -101,12 +101,12 @@ func (h *Handler) Revoke(w http.ResponseWriter, r *http.Request) {
 }
 
 // decide is the shared body for approve/reject/revoke: all three take the
-// current patient's id plus a request id from the path, and return the
+// current patient user's ID plus a request ID from the path, and return the
 // updated request.
 func (h *Handler) decide(
 	w http.ResponseWriter,
 	r *http.Request,
-	fn func(ctx context.Context, patientID, requestID uuid.UUID) (*Request, error),
+	fn func(ctx context.Context, userID, requestID uuid.UUID) (*Request, error),
 ) {
 	authUser, ok := auth.GetAuthUser(r)
 	if !ok {

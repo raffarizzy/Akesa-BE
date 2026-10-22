@@ -96,7 +96,12 @@ func main() {
 	accessHandler := access.NewHandler(accessService)
 
 	notificationRepo := notification.NewRepository(db)
-	notificationService := notification.NewService(notificationRepo, notification.NewLoggerPushClient())
+	pushClient, err := notification.NewFirebasePushClient(context.Background(), cfg.FirebaseCredentialsPath)
+	if err != nil {
+		log.Printf("warning: failed to initialize firebase push client: %v; falling back to logger", err)
+		pushClient = notification.NewLoggerPushClient()
+	}
+	notificationService := notification.NewService(notificationRepo, pushClient)
 	notificationHandler := notification.NewHandler(notificationService)
 	accessService.SetNotifier(notificationService)
 

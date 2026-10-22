@@ -98,18 +98,6 @@ func (s *Service) CreateRequest(ctx context.Context, staffUserID uuid.UUID, in C
 	return req, nil
 }
 
-func (s *Service) getPatientID(ctx context.Context, userID uuid.UUID) (uuid.UUID, error) {
-	profile, err := s.patients.GetByUserID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, patient.ErrProfileNotFound) {
-			return uuid.Nil, ErrPatientNotFound
-		}
-		return uuid.Nil, err
-	}
-
-	return profile.ID, nil
-}
-
 func (s *Service) ListForPatient(ctx context.Context, userID uuid.UUID) ([]*Request, error) {
 	patientProfile, err := s.patients.GetByUserID(ctx, userID)
 	if err != nil {
@@ -131,13 +119,7 @@ func (s *Service) ListForHospitalStaff(ctx context.Context, staffUserID uuid.UUI
 }
 
 func (s *Service) Approve(ctx context.Context, userID, requestID uuid.UUID) (*Request, error) {
-
-	patientID, err := s.getPatientID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := s.ownedPendingRequest(ctx, patientID, requestID)
+	req, err := s.ownedPendingRequest(ctx, userID, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +134,7 @@ func (s *Service) Approve(ctx context.Context, userID, requestID uuid.UUID) (*Re
 		return nil, err
 	}
 
-	s.recordEvent(ctx, updated.ID, actionApproved, patientID, map[string]any{
+	s.recordEvent(ctx, updated.ID, actionApproved, userID, map[string]any{
 		"categories": updated.Categories,
 		"patientId":  updated.PatientID.String(),
 		"hospitalId": updated.HospitalID.String(),
@@ -176,13 +158,7 @@ func (s *Service) Approve(ctx context.Context, userID, requestID uuid.UUID) (*Re
 }
 
 func (s *Service) Reject(ctx context.Context, userID, requestID uuid.UUID) (*Request, error) {
-
-	patientID, err := s.getPatientID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := s.ownedPendingRequest(ctx, patientID, requestID)
+	req, err := s.ownedPendingRequest(ctx, userID, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +173,7 @@ func (s *Service) Reject(ctx context.Context, userID, requestID uuid.UUID) (*Req
 		return nil, err
 	}
 
-	s.recordEvent(ctx, updated.ID, actionRejected, patientID, map[string]any{
+	s.recordEvent(ctx, updated.ID, actionRejected, userID, map[string]any{
 		"patientId":  updated.PatientID.String(),
 		"hospitalId": updated.HospitalID.String(),
 	})

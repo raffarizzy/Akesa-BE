@@ -27,6 +27,9 @@ type Config struct {
 	// MagicLinkBaseURL is the base URL/scheme used to construct invitation magic links.
 	// e.g. "akesa://register-hospital" or "https://app.akesa.id/register-hospital"
 	MagicLinkBaseURL string
+
+	// FirebaseCredentialsPath is the path to the serviceAccountKey.json file.
+	FirebaseCredentialsPath string
 }
 
 func Load() (*Config, error) {
@@ -41,6 +44,11 @@ func Load() (*Config, error) {
 		BlockchainContractAddress: os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS"),
 		BlockchainFromAddress:     os.Getenv("BLOCKCHAIN_FROM_ADDRESS"),
 		MagicLinkBaseURL:          os.Getenv("APP_MAGIC_LINK_BASE_URL"),
+		FirebaseCredentialsPath:   os.Getenv("FIREBASE_CREDENTIALS_PATH"),
+	}
+
+	if config.FirebaseCredentialsPath == "" {
+		config.FirebaseCredentialsPath = "serviceAccountKey.json"
 	}
 
 	if config.MagicLinkBaseURL == "" {
