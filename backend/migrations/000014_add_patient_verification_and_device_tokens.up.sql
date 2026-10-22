@@ -1,8 +1,6 @@
 ALTER TABLE patient_profiles
     ADD COLUMN IF NOT EXISTS identity_verification_status VARCHAR(20) NOT NULL DEFAULT 'NOT_VERIFIED',
-    ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN NOT NULL DEFAULT FALSE,
-    ALTER COLUMN emergency_contact_phone TYPE TEXT,
-    ALTER COLUMN phone_number TYPE TEXT;
+    ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS user_device_tokens (
     id UUID PRIMARY KEY,
