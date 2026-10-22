@@ -94,6 +94,19 @@ func DecodeVerifyProfileHashResult(hexOutput string) (bool, string, error) {
 	}
 
 	isValid := raw[31] == 1
-	recordedHash := "0x" + hex.EncodeToString(raw[32:64])
+
+	// Check if recordedHash is all zeros (Solidity bytes32(0), meaning uninitialized / no record)
+	isZero := true
+	for _, b := range raw[32:64] {
+		if b != 0 {
+			isZero = false
+			break
+		}
+	}
+
+	var recordedHash string
+	if !isZero {
+		recordedHash = hex.EncodeToString(raw[32:64])
+	}
 	return isValid, recordedHash, nil
 }

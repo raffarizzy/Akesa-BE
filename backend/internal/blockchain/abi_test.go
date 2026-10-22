@@ -43,7 +43,21 @@ func TestABIEncodingAndDecoding(t *testing.T) {
 		t.Errorf("expected isValid to be true")
 	}
 
-	if !strings.HasSuffix(recorded, hashStr) {
+	if recorded != hashStr {
 		t.Errorf("expected recorded hash to match %s, got %s", hashStr, recorded)
+	}
+
+	// Test DecodeVerifyProfileHashResult with bytes32(0) (unanchored record on-chain)
+	var zeroOutput [64]byte
+	zeroHex := "0x" + hex.EncodeToString(zeroOutput[:])
+	isValidZero, recordedZero, err := DecodeVerifyProfileHashResult(zeroHex)
+	if err != nil {
+		t.Fatalf("DecodeVerifyProfileHashResult on zero bytes failed: %v", err)
+	}
+	if isValidZero {
+		t.Errorf("expected isValid to be false for zero bytes32")
+	}
+	if recordedZero != "" {
+		t.Errorf("expected recordedHash to be empty string for zero bytes32, got %q", recordedZero)
 	}
 }

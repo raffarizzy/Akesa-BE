@@ -24,6 +24,7 @@ type StaffLookup interface {
 }
 
 type AuditRecorder interface {
+	RecordProfileHash(ctx context.Context, patientID uuid.UUID, profileHash string) error
 	RecordAccessEvent(ctx context.Context, entityType string, entityID uuid.UUID, action string, actorID uuid.UUID, payload map[string]any) error
 	VerifyProfileOnChain(ctx context.Context, patientID uuid.UUID, currentHash string) (bool, string, error)
 	GetLatestProfileHash(ctx context.Context, patientID uuid.UUID) (string, error)
@@ -258,13 +259,24 @@ func (s *Service) FetchApprovedData(ctx context.Context, staffUserID, requestID 
 	currentHash := s.patients.ComputeHash(patientProfile)
 	if s.audit != nil {
 		valid, recordedHash, err := s.audit.VerifyProfileOnChain(ctx, req.PatientID, currentHash)
-		if err != nil {
-			log.Printf("[integrity] blockchain verify error (%v), falling back to local audit ledger", err)
+		if err != nil || recordedHash == "" {
+			if err != nil {
+				log.Printf("[integrity] blockchain verify error (%v), falling back to local audit ledger", err)
+			} else {
+				log.Printf("[integrity] patient %s profile hash missing on-chain, falling back to local audit ledger", req.PatientID)
+			}
 			latestHash, lerr := s.audit.GetLatestProfileHash(ctx, req.PatientID)
 			if lerr == nil && latestHash != "" {
 				valid = (latestHash == currentHash)
 				recordedHash = latestHash
 			}
+		}
+
+		// Auto-anchor unanchored patient profile (e.g. legacy/dump data without previous audit log)
+		if recordedHash == "" {
+			log.Printf("[integrity] patient %s has never been anchored in blockchain or audit ledger. Auto-anchoring baseline hash...", req.PatientID)
+			_ = s.audit.RecordProfileHash(ctx, req.PatientID, currentHash)
+			valid = true
 		}
 
 		if !valid && recordedHash != "" {
