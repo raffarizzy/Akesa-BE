@@ -1,4 +1,4 @@
-package server
+﻿package server
 
 import (
 	"net/http"
@@ -13,6 +13,7 @@ import (
 	identity "github.com/farhan-hamzah/Akesa/backend/internal/patient/identify"
 	"github.com/farhan-hamzah/Akesa/backend/internal/patientqr"
 	"github.com/farhan-hamzah/Akesa/backend/internal/user"
+	"github.com/farhan-hamzah/Akesa/backend/internal/ws"
 )
 
 const (
@@ -31,7 +32,9 @@ type Dependencies struct {
 	AuditHandler        *audit.Handler
 	PatientQRHandler    *patientqr.Handler
 	NotificationHandler *notification.Handler
+	WSHandler           *ws.Handler
 }
+
 type Server struct {
 	mux *http.ServeMux
 }
@@ -59,6 +62,13 @@ func (s *Server) registerRoutes(deps Dependencies) {
 
 	s.mux.Handle("POST /api/v1/users/sync", auth.RequireAuth(http.HandlerFunc(deps.UserHandler.Sync)))
 	s.mux.Handle("GET /api/v1/me", auth.RequireAuth(http.HandlerFunc(deps.UserHandler.Me)))
+
+	// --- Real-time WebSocket connection ---
+	if deps.WSHandler != nil {
+		s.mux.Handle("GET /api/v1/ws",
+			s.wsChain(deps, http.HandlerFunc(deps.WSHandler.ServeWS)),
+		)
+	}
 
 	s.mux.Handle("GET /api/v1/hospitals",
 		s.chain(deps, http.HandlerFunc(deps.HospitalHandler.ListActive)),
@@ -196,6 +206,27 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	s.mux.Handle("POST /api/v1/notifications/read-all",
 		s.chain(deps, http.HandlerFunc(deps.NotificationHandler.MarkAllAsRead)),
 	)
+}
+
+func (s *Server) wsChain(deps Dependencies, final http.Handler) http.Handler {
+	// Middleware untuk mengizinkan token dari query param ?token=...
+	tokenFromQuery := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") == "" {
+				token := r.URL.Query().Get("token")
+				if token != "" {
+					r.Header.Set("Authorization", "Bearer "+token)
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	return appmiddleware.Chain(
+		tokenFromQuery,
+		auth.RequireAuth,
+		auth.WithUser(deps.UserLoader),
+	)(final)
 }
 
 func (s *Server) chain(deps Dependencies, final http.Handler, roles ...string) http.Handler {

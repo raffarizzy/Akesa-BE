@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"context"
@@ -23,6 +23,7 @@ import (
 	"github.com/farhan-hamzah/Akesa/backend/internal/patientqr"
 	"github.com/farhan-hamzah/Akesa/backend/internal/server"
 	"github.com/farhan-hamzah/Akesa/backend/internal/user"
+	"github.com/farhan-hamzah/Akesa/backend/internal/ws"
 )
 
 func main() {
@@ -105,6 +106,12 @@ func main() {
 	notificationHandler := notification.NewHandler(notificationService)
 	accessService.SetNotifier(notificationService)
 
+	// Inisialisasi Real-time WebSocket Hub
+	wsHub := ws.NewHub()
+	go wsHub.Run()
+	wsHandler := ws.NewHandler(wsHub)
+	notificationService.SetBroadcaster(wsHub)
+
 	appServer := server.New(server.Dependencies{
 		UserLoader:          userService,
 		UserHandler:         userHandler,
@@ -115,6 +122,7 @@ func main() {
 		PatientQRHandler:    patientQRHandler,
 		IdentityHandler:     identityHandler,
 		NotificationHandler: notificationHandler,
+		WSHandler:           wsHandler,
 	})
 
 	addr := ":" + cfg.Port

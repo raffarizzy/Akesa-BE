@@ -1,8 +1,11 @@
 package middleware
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +27,21 @@ func (rec *statusRecorder) Write(b []byte) (int, error) {
 		rec.body.Write(b)
 	}
 	return rec.ResponseWriter.Write(b)
+}
+
+// Hijack implements http.Hijacker so that WebSocket connections can upgrade properly through this middleware.
+func (rec *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hj, ok := rec.ResponseWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+	return nil, nil, fmt.Errorf("response writer does not implement http.Hijacker")
+}
+
+// Flush implements http.Flusher to support streaming responses.
+func (rec *statusRecorder) Flush() {
+	if fl, ok := rec.ResponseWriter.(http.Flusher); ok {
+		fl.Flush()
+	}
 }
 
 func Logging(next http.Handler) http.Handler {

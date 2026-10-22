@@ -1,4 +1,4 @@
-package notification
+﻿package notification
 
 import (
 	"context"
@@ -28,9 +28,14 @@ type Notifier interface {
 	NotifyRole(ctx context.Context, role string, in NotificationInput) error
 }
 
+type RealtimeBroadcaster interface {
+	BroadcastToUser(userID uuid.UUID, event string, data map[string]any)
+}
+
 type Service struct {
-	repo       Store
-	pushClient PushClient
+	repo        Store
+	pushClient  PushClient
+	broadcaster RealtimeBroadcaster
 }
 
 func NewService(repo Store, pushClient PushClient) *Service {
@@ -41,6 +46,10 @@ func NewService(repo Store, pushClient PushClient) *Service {
 		repo:       repo,
 		pushClient: pushClient,
 	}
+}
+
+func (s *Service) SetBroadcaster(b RealtimeBroadcaster) {
+	s.broadcaster = b
 }
 
 func (s *Service) NotifyUser(ctx context.Context, userID uuid.UUID, in NotificationInput) error {
@@ -84,7 +93,26 @@ func (s *Service) NotifyUser(ctx context.Context, userID uuid.UUID, in Notificat
 		return fmt.Errorf("save notification: %w", err)
 	}
 
-	// Fetch device tokens for push notification
+	// 1. Broadcast real-time event via WebSocket jika user sedang online
+	if s.broadcaster != nil {
+		wsData := map[string]any{
+			"id":        n.ID.String(),
+			"title":     in.Title,
+			"message":   in.Message,
+			"category":  string(n.Category),
+			"severity":  string(n.Severity),
+			"createdAt": n.CreatedAt.Format(time.RFC3339),
+		}
+		if n.ActionURL != nil {
+			wsData["actionUrl"] = *n.ActionURL
+		}
+		if in.Metadata != nil {
+			wsData["metadata"] = in.Metadata
+		}
+		s.broadcaster.BroadcastToUser(userID, "notification", wsData)
+	}
+
+	// 2. Fetch device tokens for FCM push notification
 	tokens, err := s.repo.GetDeviceTokensByUserID(ctx, userID)
 	if err != nil {
 		log.Printf("[notification] warning: failed to fetch device tokens for user %s: %v", userID, err)
