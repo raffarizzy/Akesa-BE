@@ -16,7 +16,9 @@ SET session_replication_role = 'replica';
 -- Pastikan kolom verifikasi identitas dan tabel device token dibuat jika belum ada
 ALTER TABLE patient_profiles
     ADD COLUMN IF NOT EXISTS identity_verification_status VARCHAR(20) NOT NULL DEFAULT 'NOT_VERIFIED',
-    ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN NOT NULL DEFAULT FALSE;
+    ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    ALTER COLUMN emergency_contact_phone TYPE TEXT,
+    ALTER COLUMN phone_number TYPE TEXT;
 
 CREATE TABLE IF NOT EXISTS user_device_tokens (
     id UUID PRIMARY KEY,
