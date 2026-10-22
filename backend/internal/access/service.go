@@ -346,6 +346,22 @@ func (s *Service) FetchApprovedData(ctx context.Context, staffUserID, requestID 
 		"hospitalId": req.HospitalID.String(),
 	})
 
+	if s.notifier != nil {
+		_ = s.notifier.NotifyUser(ctx, patientProfile.UserID, notification.NotificationInput{
+			Title:     "Data Rekam Medis Diakses",
+			Message:   "Rumah sakit sedang mengakses rekam medis Anda.",
+			Category:  notification.CategoryAccessRequest,
+			Severity:  notification.SeverityInfo,
+			ActionURL: "/patient/history",
+			Metadata: map[string]any{
+				"requestId":  req.ID.String(),
+				"patientId":  req.PatientID.String(),
+				"hospitalId": req.HospitalID.String(),
+				"action":     actionAccessed,
+			},
+		})
+	}
+
 	return view, nil
 }
 
