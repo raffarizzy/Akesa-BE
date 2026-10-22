@@ -65,7 +65,14 @@ CREATE TABLE IF NOT EXISTS "access_requests" (
 -- Dumping data for table public.access_requests: -1 rows
 /*!40000 ALTER TABLE "access_requests" DISABLE KEYS */;
 REPLACE INTO "access_requests" ("id", "hospital_id", "patient_id", "requested_by", "purpose", "categories", "status", "decided_at", "created_at", "updated_at") VALUES
-	('3efac1ba-5b4a-43bc-824b-eeb926209ddb', '85ce395a-541c-431d-b371-9286a86f6386', 'c6acab0f-8506-4f72-8a82-e19be15de335', '76568a30-17db-40ee-a4a3-04af16793773', 'Pemeriksaana pasien', '{IDENTITY,CONTACT,MEDICAL_BASIC}', 'REVOKED', '2026-10-08 05:44:39.509851+00', '2026-10-08 05:14:15.383579+00', '2026-10-08 10:19:39.721265+00');
+	('3efac1ba-5b4a-43bc-824b-eeb926209ddb', '85ce395a-541c-431d-b371-9286a86f6386', 'c6acab0f-8506-4f72-8a82-e19be15de335', '76568a30-17db-40ee-a4a3-04af16793773', 'Pemeriksaana pasien', '{IDENTITY,CONTACT,MEDICAL_BASIC}', 'REVOKED', '2026-10-08 05:44:39.509851+00', '2026-10-08 05:14:15.383579+00', '2026-10-08 10:19:39.721265+00'),
+	('66437ace-105e-4914-9e46-07dcf20ec31d', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'c497174e-2617-4b40-9869-80e4b778486e', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'nego 10k', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'PENDING', NULL, '2026-10-17 13:51:54.238433+00', '2026-10-17 13:51:54.238433+00'),
+	('7d678b60-5d32-4dc4-ab35-3739f5e2e847', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'kelas', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'REJECTED', '2026-10-22 02:25:06.530135+00', '2026-10-22 01:39:09.084574+00', '2026-10-22 02:24:25.479838+00'),
+	('c69f97e0-060b-47bb-b4e3-a6a9c63066dd', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'bisa laa', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'REJECTED', '2026-10-22 02:41:19.585034+00', '2026-10-22 02:25:14.584059+00', '2026-10-22 02:40:38.570508+00'),
+	('087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'angin selalu mencintai mu', '{IDENTITY,CONTACT,MEDICAL_BASIC,INSURANCE,EMERGENCY_CONTACT}', 'REVOKED', '2026-10-22 02:42:21.428445+00', '2026-10-22 02:41:17.42658+00', '2026-10-22 03:39:44.256826+00'),
+	('b74fb6db-7360-478b-9ab1-9873c40aa362', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'minta dong', '{IDENTITY}', 'REJECTED', '2026-10-22 03:41:33.240986+00', '2026-10-22 03:40:21.313424+00', '2026-10-22 03:40:52.248156+00'),
+	('4c9183cc-0a02-4040-8112-f2ac1e95215b', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'maaf jika banyak bertanya', '{IDENTITY}', 'REJECTED', '2026-10-22 03:56:50.58846+00', '2026-10-22 03:41:38.468126+00', '2026-10-22 03:56:09.622607+00'),
+	('3b7561cd-c875-4935-91fd-7d786fb63f66', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'ga sopan lu ye amjng', '{IDENTITY}', 'APPROVED', '2026-10-22 03:57:32.647354+00', '2026-10-22 03:56:32.603881+00', '2026-10-22 03:56:51.571168+00');
 /*!40000 ALTER TABLE "access_requests" ENABLE KEYS */;
 
 -- Dumping structure for table public.audit_chain_state
@@ -78,7 +85,7 @@ CREATE TABLE IF NOT EXISTS "audit_chain_state" (
 -- Dumping data for table public.audit_chain_state: -1 rows
 /*!40000 ALTER TABLE "audit_chain_state" DISABLE KEYS */;
 REPLACE INTO "audit_chain_state" ("chain_name", "last_hash") VALUES
-	('global', '9e88b42918d7beee9772a9ed2c9c4496d226bdcf06a92841199e9f172d6bb705');
+	('global', '7e826e47ca49fdb1c23a1ede187e12456b103d0ad25e0c68fb043cef8142d787');
 /*!40000 ALTER TABLE "audit_chain_state" ENABLE KEYS */;
 
 -- Dumping structure for table public.audit_logs
@@ -110,7 +117,38 @@ REPLACE INTO "audit_logs" ("id", "entity_type", "entity_id", "action", "actor_id
 	('33213388-b157-4391-a828-6d66df5143dd', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'DATA_ACCESSED', '76568a30-17db-40ee-a4a3-04af16793773', '{"dataHash": "57bfd030a34c5575b66dce4ad46eeea3aad1a0761da2b86e47aa9b7c53bea980", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC"]}', '137f11d99212ec515a4fffe2947b6176e5566169e142b38956a95165f885e6d9', 'b97910fec601fb27576fd9beeecd6d34a95abae471c494e0f48be926abcaa093', '2026-10-08 06:23:05.902642+00'),
 	('e96da060-d1df-49b5-bcba-3ad04e9bb723', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'DATA_ACCESSED', '76568a30-17db-40ee-a4a3-04af16793773', '{"dataHash": "57bfd030a34c5575b66dce4ad46eeea3aad1a0761da2b86e47aa9b7c53bea980", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC"]}', 'b97910fec601fb27576fd9beeecd6d34a95abae471c494e0f48be926abcaa093', '9a250d39ced0f2c3c4c25af81b2dc48e44e59684533f3fa1e8addafc14a0329d', '2026-10-08 10:16:30.293183+00'),
 	('a141dfa0-57ac-459f-afc1-a7fb18d00760', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'DATA_ACCESSED', '76568a30-17db-40ee-a4a3-04af16793773', '{"dataHash": "57bfd030a34c5575b66dce4ad46eeea3aad1a0761da2b86e47aa9b7c53bea980", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC"]}', '9a250d39ced0f2c3c4c25af81b2dc48e44e59684533f3fa1e8addafc14a0329d', 'e76ef2fd93e6ac8b4d93c0b77e2f7d4ae0f098b25bf5a12230ecdebea9d98a12', '2026-10-08 10:16:42.631643+00'),
-	('569539b0-0b84-43fe-bc29-8cb4ccedaab8', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'ACCESS_REVOKED', '40551d73-8ad5-43f4-a4dd-c44f046718d0', 'null', 'e76ef2fd93e6ac8b4d93c0b77e2f7d4ae0f098b25bf5a12230ecdebea9d98a12', '9e88b42918d7beee9772a9ed2c9c4496d226bdcf06a92841199e9f172d6bb705', '2026-10-08 10:19:39.737698+00');
+	('569539b0-0b84-43fe-bc29-8cb4ccedaab8', 'ACCESS_REQUEST', '3efac1ba-5b4a-43bc-824b-eeb926209ddb', 'ACCESS_REVOKED', '40551d73-8ad5-43f4-a4dd-c44f046718d0', 'null', 'e76ef2fd93e6ac8b4d93c0b77e2f7d4ae0f098b25bf5a12230ecdebea9d98a12', '9e88b42918d7beee9772a9ed2c9c4496d226bdcf06a92841199e9f172d6bb705', '2026-10-08 10:19:39.737698+00'),
+	('df6cf722-6f61-4dca-a7db-40c9f3726e69', 'PATIENT_PROFILE', '9d2867ac-d812-4001-a5c9-5c7c7af1ccc9', 'PROFILE_UPDATED', '9d2867ac-d812-4001-a5c9-5c7c7af1ccc9', '{"profileHash": "2224087a184495573758799cc2e992824d7e8bcf4d8df357be9072947c7f62bf"}', '9e88b42918d7beee9772a9ed2c9c4496d226bdcf06a92841199e9f172d6bb705', 'b40c593b1b44e62fc22e9fefa4e834d11050be65de174154ba5f54151631ce58', '2026-10-17 09:22:56.348651+00'),
+	('0226e2dc-7e58-499a-a1ac-c0d7f57ed480', 'PATIENT_PROFILE', '71e637af-3216-4dab-abd6-d377a6981465', 'PROFILE_UPDATED', '71e637af-3216-4dab-abd6-d377a6981465', '{"profileHash": "68661cbc3afe31bf4b8dfffc127c0f7a5d4255f461c1a5c4a76b177b79f95ea5"}', 'b40c593b1b44e62fc22e9fefa4e834d11050be65de174154ba5f54151631ce58', '7c7e04af5a41ad693ed4187d5b5460e896f34ba537e86d51ef2011f6840d491d', '2026-10-17 09:35:16.567789+00'),
+	('85510d4d-e009-4784-8385-47d46072d7a6', 'PATIENT_PROFILE', 'c497174e-2617-4b40-9869-80e4b778486e', 'PROFILE_UPDATED', 'c497174e-2617-4b40-9869-80e4b778486e', '{"profileHash": "ae5c7f76dcd33bb58ac5ba1251e63287db9eb9b492ccd1c1b74b983b4bfb821d"}', '7c7e04af5a41ad693ed4187d5b5460e896f34ba537e86d51ef2011f6840d491d', '4744489bf3ac5724336a2205e51bef49e8167a895bfc8fed81a2947388749d00', '2026-10-17 09:39:02.886748+00'),
+	('5a7aea5b-d3a5-4e55-a994-02fd51945d45', 'PATIENT_PROFILE', 'c497174e-2617-4b40-9869-80e4b778486e', 'PROFILE_UPDATED', 'c497174e-2617-4b40-9869-80e4b778486e', '{"profileHash": "402a49f4f2261984828d2a6d547c2b5ff65228b0f5820a624934f6064bda14bc"}', '4744489bf3ac5724336a2205e51bef49e8167a895bfc8fed81a2947388749d00', '97889f6010fb25bf145aecfdc8c16cf55dde27d5e45b0d93c8caedcfbdccf1a0', '2026-10-17 10:06:25.153462+00'),
+	('bc49d031-5e3a-456f-9826-52a503318b52', 'ACCESS_REQUEST', '66437ace-105e-4914-9e46-07dcf20ec31d', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "c497174e-2617-4b40-9869-80e4b778486e", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '97889f6010fb25bf145aecfdc8c16cf55dde27d5e45b0d93c8caedcfbdccf1a0', '67ca1e3d3b19b8a186c91b3655e8a693cb797541b8466434e32885587cb8f7c7', '2026-10-17 13:52:31.916029+00'),
+	('8c5f6816-b890-4a4a-89cb-e602bab25ca4', 'PATIENT_PROFILE', '3d7da47a-e81d-47a0-b921-bcf7724b4109', 'PROFILE_UPDATED', '3d7da47a-e81d-47a0-b921-bcf7724b4109', '{"profileHash": "b68c097b05dbb46d81525eaa62405cc3546e4e4f046d1493da30c2f9d71ab4a5"}', '67ca1e3d3b19b8a186c91b3655e8a693cb797541b8466434e32885587cb8f7c7', 'bb40753df18390dd0975c4029c68dcffb9b5942cffb33590b30469621ddd70c2', '2026-10-17 13:56:10.395124+00'),
+	('fbb08173-5c62-49c2-9c36-dbb0fbc01836', 'ACCESS_REQUEST', 'd5385ff0-05e2-41dc-bbd1-b0299318c82d', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "3d7da47a-e81d-47a0-b921-bcf7724b4109", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'bb40753df18390dd0975c4029c68dcffb9b5942cffb33590b30469621ddd70c2', 'a867262a4cec8bf0b63f0c702dbba3e161a7b80a2534c16c59c58f60ac764544', '2026-10-17 13:56:58.373247+00'),
+	('d1a0ea3d-3f1a-48d1-9db3-0855d8a173f8', 'PATIENT_PROFILE', 'b5cdf64e-f915-41f0-8de1-c8669dbb491d', 'PROFILE_UPDATED', 'b5cdf64e-f915-41f0-8de1-c8669dbb491d', '{"profileHash": "dbadd69ed23f53f070418501d1976e8393434ee73024aba7fb5ed86311cf7f2a"}', 'a867262a4cec8bf0b63f0c702dbba3e161a7b80a2534c16c59c58f60ac764544', '8ab3586b4eb14609e7516a345057e295c6dbc044820b98cc378dd17126726ccc', '2026-10-21 15:20:53.843196+00'),
+	('0e2870bc-bf56-41da-a438-915fe76fb876', 'PATIENT_PROFILE', 'b5cdf64e-f915-41f0-8de1-c8669dbb491d', 'PROFILE_UPDATED', 'b5cdf64e-f915-41f0-8de1-c8669dbb491d', '{"profileHash": "f03f8d2fc013662a4aac1201ab0721838d34325c41eb4d7714baf8c6ca19d178"}', '8ab3586b4eb14609e7516a345057e295c6dbc044820b98cc378dd17126726ccc', '11efb358e5d3fe82e0bb4e7eba432f660c687be0ce8ab3625f48556db25248c0', '2026-10-21 15:25:40.088063+00'),
+	('aea3a9c0-0850-49b4-82a1-a5cd4446171b', 'PATIENT_PROFILE', '8c8278e0-0328-4af9-8870-b2bddaf3a715', 'PROFILE_UPDATED', '8c8278e0-0328-4af9-8870-b2bddaf3a715', '{"profileHash": "37550ca6fd250874598ed9b58b975e7568483e331b91421edf066f4c49e143d3"}', '11efb358e5d3fe82e0bb4e7eba432f660c687be0ce8ab3625f48556db25248c0', '0ddffd17346aec0c509694d0a6e6899a3962133ce1e27363ed53a3dc75fbd35b', '2026-10-21 16:50:53.252336+00'),
+	('de530e8e-d518-4dcf-bb8e-807b11f3ffc3', 'PATIENT_PROFILE', '8c8278e0-0328-4af9-8870-b2bddaf3a715', 'PROFILE_UPDATED', '8c8278e0-0328-4af9-8870-b2bddaf3a715', '{"profileHash": "4a87f65e743bdb835304b58d530d968893f19f11143e2ec2ed0904c198daeab1"}', '0ddffd17346aec0c509694d0a6e6899a3962133ce1e27363ed53a3dc75fbd35b', 'b675c337536565a934e67ca6eff8584e2874853cc4986d8cd017f9e928aa0069', '2026-10-21 16:51:05.357021+00'),
+	('87e7f76b-8ce7-4a41-af93-f848100d1c71', 'PATIENT_PROFILE', '8c8278e0-0328-4af9-8870-b2bddaf3a715', 'PROFILE_UPDATED', '8c8278e0-0328-4af9-8870-b2bddaf3a715', '{"profileHash": "f01e3c3502656c64411143a4ef3e8d04dded7c08dd9aa8be017266c5cdca52a8"}', 'b675c337536565a934e67ca6eff8584e2874853cc4986d8cd017f9e928aa0069', '6d2a6cc45ea971f1ee3ef6ce68a911b3044e527155ff6b6d0972ae955fee8fd0', '2026-10-21 16:52:19.395305+00'),
+	('cbee7632-59ab-4aae-9b0e-2e782b249dbf', 'PATIENT_PROFILE', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', 'PROFILE_UPDATED', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', '{"profileHash": "0b3afcdcee97e1f5fc7508754c09c503b8cbca24c7d0f69fe3022b0cfe4d1682"}', '76b4029769a8cd72e50d6e0003ae4e6e7eaf3f5c1c79334a4236f911b240cea3', '9d0e46983b4bad90ba85d01cd5c82eae4601975a2a97d43600ec96c99e881183', '2026-10-21 16:56:37.518286+00'),
+	('766b03d2-51eb-4509-b15c-5ab4130e207a', 'PATIENT_PROFILE', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', 'PROFILE_UPDATED', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', '{"profileHash": "a695eb9c67296307d3c038eab16086054957fc22018e30305e7500f883828924"}', '9d0e46983b4bad90ba85d01cd5c82eae4601975a2a97d43600ec96c99e881183', '54cad05bc734dda6158a2f184da7e6aecb5aeb6bee93b55e2976b8eda66f73ed', '2026-10-21 17:38:45.553796+00'),
+	('b00a1cba-a682-48e2-8a2a-b85a3b9e7c75', 'PATIENT_PROFILE', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', 'PROFILE_UPDATED', 'a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', '{"profileHash": "0b3afcdcee97e1f5fc7508754c09c503b8cbca24c7d0f69fe3022b0cfe4d1682"}', '6d2a6cc45ea971f1ee3ef6ce68a911b3044e527155ff6b6d0972ae955fee8fd0', '76b4029769a8cd72e50d6e0003ae4e6e7eaf3f5c1c79334a4236f911b240cea3', '2026-10-21 16:55:39.034864+00'),
+	('f49cf43c-d541-4c76-9643-400e95189529', 'ACCESS_REQUEST', '7d678b60-5d32-4dc4-ab35-3739f5e2e847', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '54cad05bc734dda6158a2f184da7e6aecb5aeb6bee93b55e2976b8eda66f73ed', '661e2c9322db85ebf0e6f9ca7bf0bc3b11e303a034f78d9295153181d9a245f0', '2026-10-22 01:39:50.670471+00'),
+	('ac451a31-48da-4fd3-91fc-6242d8a36dac', 'ACCESS_REQUEST', '7d678b60-5d32-4dc4-ab35-3739f5e2e847', 'ACCESS_REJECTED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '661e2c9322db85ebf0e6f9ca7bf0bc3b11e303a034f78d9295153181d9a245f0', 'f4fec7b67856b307d0ff51c3925351d146e687389c575c078777075bf8dabc85', '2026-10-22 02:25:07.007694+00'),
+	('1f4c7ceb-9357-4d9c-be26-8b2e91fc5a76', 'ACCESS_REQUEST', 'c69f97e0-060b-47bb-b4e3-a6a9c63066dd', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'f4fec7b67856b307d0ff51c3925351d146e687389c575c078777075bf8dabc85', '4fa4214fdddda4b7024d1651966b2d862eeafe60a301397ce543c023dae444f6', '2026-10-22 02:25:56.005422+00'),
+	('66422d68-ed9e-48da-9e42-cbbd2f528a02', 'ACCESS_REQUEST', 'c69f97e0-060b-47bb-b4e3-a6a9c63066dd', 'ACCESS_REJECTED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '4fa4214fdddda4b7024d1651966b2d862eeafe60a301397ce543c023dae444f6', '8bf8455e6d661db67172dd7944c8b898ddb52ed9471832f24b004eb8f1e27bcc', '2026-10-22 02:41:20.090021+00'),
+	('124e3142-79ef-4ed0-8c85-84d2d6d11c69', 'ACCESS_REQUEST', '087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '8bf8455e6d661db67172dd7944c8b898ddb52ed9471832f24b004eb8f1e27bcc', 'ce2b8bff3668cfe142f8bb74f3ef08a9a5a3b2099317e8af03a556c13a005231', '2026-10-22 02:41:58.941818+00'),
+	('adaabc01-fa4f-40a1-b439-555a27913036', 'ACCESS_REQUEST', '087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'ACCESS_APPROVED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'ce2b8bff3668cfe142f8bb74f3ef08a9a5a3b2099317e8af03a556c13a005231', '4324ce1f31e1ce0117757ef9d08c327830b148cf34ac313bbde82215d0328dc6', '2026-10-22 02:42:21.791446+00'),
+	('edbe0891-44e7-4a80-8611-622249c236e9', 'ACCESS_REQUEST', '087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'DATA_ACCESSED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"dataHash": "156ebc5857d6f80876078dc72960c8c6e329518e8a4c38c60ef7a59ca372372f", "patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '4324ce1f31e1ce0117757ef9d08c327830b148cf34ac313bbde82215d0328dc6', '13a8f6f4bf8a2e6fb2e5d1dd1107bd4170d387f616e406563aa459ea9a397db9', '2026-10-22 02:42:39.878483+00'),
+	('da9f837a-113b-43c8-8a8b-0b21d5efc2c4', 'ACCESS_REQUEST', '087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'DATA_ACCESSED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"dataHash": "156ebc5857d6f80876078dc72960c8c6e329518e8a4c38c60ef7a59ca372372f", "patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY", "CONTACT", "MEDICAL_BASIC", "INSURANCE", "EMERGENCY_CONTACT"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '13a8f6f4bf8a2e6fb2e5d1dd1107bd4170d387f616e406563aa459ea9a397db9', '63f2716cd25a3774bd9573b74594830f210a137b408186364a950e8b485e7f56', '2026-10-22 03:35:59.936092+00'),
+	('a843f7ad-dd5b-4460-89ed-c7bcab568f35', 'ACCESS_REQUEST', '087b7f1c-302b-4ee7-8c00-264f16b89fc4', 'ACCESS_REVOKED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '63f2716cd25a3774bd9573b74594830f210a137b408186364a950e8b485e7f56', '697beea389bc13717613d685f007ab1c93b2aa9bb452bd3e74cf8886ba535b2d', '2026-10-22 03:40:25.711164+00'),
+	('365ad8bb-9fca-47cd-8a34-044f2db610ed', 'ACCESS_REQUEST', 'b74fb6db-7360-478b-9ab1-9873c40aa362', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '697beea389bc13717613d685f007ab1c93b2aa9bb452bd3e74cf8886ba535b2d', 'cc96c5059589a9bdad67d4df1fb07ad4f5733f1fe6e96e3e205d54a917676bfc', '2026-10-22 03:41:02.672726+00'),
+	('1db7c789-0a45-4111-a1ec-9e15b2eec398', 'ACCESS_REQUEST', 'b74fb6db-7360-478b-9ab1-9873c40aa362', 'ACCESS_REJECTED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'cc96c5059589a9bdad67d4df1fb07ad4f5733f1fe6e96e3e205d54a917676bfc', '105a3685df769b6285385a473fd9e0bc29458835fc84bbdb12866e901e89c74b', '2026-10-22 03:41:33.710394+00'),
+	('04cd1aba-df35-4402-84b9-9d0d53cfcae9', 'ACCESS_REQUEST', '4c9183cc-0a02-4040-8112-f2ac1e95215b', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '105a3685df769b6285385a473fd9e0bc29458835fc84bbdb12866e901e89c74b', '6732e0c6a114a63072d315c359a581b8deb603e7423b6292140e5cb35fb93930', '2026-10-22 03:42:19.961749+00'),
+	('37011af7-6c56-4904-819d-57169db69bec', 'ACCESS_REQUEST', '4c9183cc-0a02-4040-8112-f2ac1e95215b', 'ACCESS_REJECTED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '6732e0c6a114a63072d315c359a581b8deb603e7423b6292140e5cb35fb93930', 'd8c463bd3474d4114a30899e6e4691260cd5701d514ae76423ffb4cb852134fa', '2026-10-22 03:56:50.995919+00'),
+	('52100a99-b9e0-4abb-9fb9-01b416758531', 'ACCESS_REQUEST', '3b7561cd-c875-4935-91fd-7d786fb63f66', 'ACCESS_REQUESTED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'd8c463bd3474d4114a30899e6e4691260cd5701d514ae76423ffb4cb852134fa', 'e975c31d1d93d52460dcf66edf1fed7822840fd361ebac236f65866b7c90d5c6', '2026-10-22 03:57:14.009928+00'),
+	('54d1a3db-27d0-4377-af8d-4ce94f545105', 'ACCESS_REQUEST', '3b7561cd-c875-4935-91fd-7d786fb63f66', 'ACCESS_APPROVED', '4735141b-6c04-4df4-8312-d61b351eea9d', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', 'e975c31d1d93d52460dcf66edf1fed7822840fd361ebac236f65866b7c90d5c6', '2648528df72adc9a51d8976eb3c365a6c980e778c64b63ee04f95a5876e2e6b9', '2026-10-22 03:57:32.953296+00'),
+	('0de0751f-bcb1-4d9e-b849-33c21d8f75de', 'ACCESS_REQUEST', '3b7561cd-c875-4935-91fd-7d786fb63f66', 'DATA_ACCESSED', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', '{"dataHash": "156ebc5857d6f80876078dc72960c8c6e329518e8a4c38c60ef7a59ca372372f", "patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "categories": ["IDENTITY"], "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2648528df72adc9a51d8976eb3c365a6c980e778c64b63ee04f95a5876e2e6b9', '7e826e47ca49fdb1c23a1ede187e12456b103d0ad25e0c68fb043cef8142d787', '2026-10-22 03:57:36.032146+00');
 /*!40000 ALTER TABLE "audit_logs" ENABLE KEYS */;
 
 -- Dumping structure for table public.hospitals
@@ -124,17 +162,80 @@ CREATE TABLE IF NOT EXISTS "hospitals" (
 	"status" VARCHAR(30) NOT NULL DEFAULT 'PENDING',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	"npwp" VARCHAR(30) NULL DEFAULT NULL,
+	"license_document_url" TEXT NULL DEFAULT NULL,
+	"pic_user_id" UUID NULL DEFAULT NULL,
 	PRIMARY KEY ("id"),
 	UNIQUE INDEX "hospitals_email_key" ("email"),
 	UNIQUE INDEX "hospitals_registration_number_key" ("registration_number"),
-	INDEX "idx_hospitals_status" ("status")
+	INDEX "idx_hospitals_status" ("status"),
+	INDEX "idx_hospitals_pic_user_id" ("pic_user_id"),
+	CONSTRAINT "hospitals_pic_user_id_fkey" FOREIGN KEY ("pic_user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
 );
 
--- Dumping data for table public.hospitals: -1 rows
+-- Dumping data for table public.hospitals: 1 rows
 /*!40000 ALTER TABLE "hospitals" DISABLE KEYS */;
-REPLACE INTO "hospitals" ("id", "name", "address", "phone", "email", "registration_number", "status", "created_at", "updated_at") VALUES
-	('85ce395a-541c-431d-b371-9286a86f6386', 'RS Telkom Medika', 'Gedung Business Center, Jl. Telekomunikasi, Sukapura, Dayeuhkolot, Bandung Regency, West Java 40257', '081111500115', 'admin@telkommedika.id', 'RS-2026-001', 'ACTIVE', '2026-09-12 12:01:51.046007+00', '2026-09-12 12:03:29.595756+00');
+REPLACE INTO "hospitals" ("id", "name", "address", "phone", "email", "registration_number", "status", "created_at", "updated_at", "npwp", "license_document_url", "pic_user_id") VALUES
+	('85ce395a-541c-431d-b371-9286a86f6386', 'RS Telkom Medika', 'Gedung Business Center, Jl. Telekomunikasi, Sukapura, Dayeuhkolot, Bandung Regency, West Java 40257', '081111500115', 'admin@telkommedika.id', 'RS-2026-001', 'ACTIVE', '2026-09-12 12:01:51.046007+00', '2026-09-12 12:03:29.595756+00', NULL, NULL, NULL),
+	('e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'Hari Tanpa Badai', 'Jl. hujan orang mati no 3', '022123456780', 'serapuhlarik@yopmail.com', 'RS-1293829', 'ACTIVE', '2026-10-17 13:48:44.07238+00', '2026-10-17 13:48:44.07238+00', '01.23984.123.123', 'youtube.com', 'c673f68f-10a2-4792-a4b2-3109d866e4fe');
 /*!40000 ALTER TABLE "hospitals" ENABLE KEYS */;
+
+-- Dumping structure for table public.hospital_applications
+CREATE TABLE IF NOT EXISTS "hospital_applications" (
+	"id" UUID NOT NULL,
+	"invitation_id" UUID NOT NULL,
+	"applicant_user_id" UUID NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
+	"address" TEXT NOT NULL,
+	"phone" VARCHAR(50) NOT NULL,
+	"email" VARCHAR(255) NOT NULL,
+	"registration_number" VARCHAR(100) NOT NULL,
+	"npwp" VARCHAR(30) NULL DEFAULT NULL,
+	"license_document_url" TEXT NULL DEFAULT NULL,
+	"pic_full_name" VARCHAR(255) NOT NULL,
+	"pic_position" VARCHAR(100) NOT NULL,
+	"status" UNKNOWN NOT NULL DEFAULT 'PENDING_REVIEW',
+	"admin_notes" TEXT NULL DEFAULT NULL,
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	PRIMARY KEY ("id"),
+	INDEX "idx_hospital_applications_applicant" ("applicant_user_id"),
+	INDEX "idx_hospital_applications_status" ("status"),
+	CONSTRAINT "hospital_applications_applicant_user_id_fkey" FOREIGN KEY ("applicant_user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
+	CONSTRAINT "hospital_applications_invitation_id_fkey" FOREIGN KEY ("invitation_id") REFERENCES "hospital_invitations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+
+-- Dumping data for table public.hospital_applications: -1 rows
+/*!40000 ALTER TABLE "hospital_applications" DISABLE KEYS */;
+REPLACE INTO "hospital_applications" ("id", "invitation_id", "applicant_user_id", "name", "address", "phone", "email", "registration_number", "npwp", "license_document_url", "pic_full_name", "pic_position", "status", "admin_notes", "created_at", "updated_at") VALUES
+	('cbd07e81-30b7-4e09-ad54-05922fa4e43c', '639a2167-79fb-4fea-a15a-b683587ac911', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Hari Tanpa Badai', 'Jl. hujan orang mati no 3', '022123456780', 'serapuhlarik@yopmail.com', 'RS-1293829', '01.23984.123.123', 'youtube.com', 'Lidah Berduri', 'Ketua Suku', 'APPROVED', '', '2026-10-17 13:47:44.251895+00', '2026-10-17 13:48:44.07238+00');
+/*!40000 ALTER TABLE "hospital_applications" ENABLE KEYS */;
+
+-- Dumping structure for table public.hospital_invitations
+CREATE TABLE IF NOT EXISTS "hospital_invitations" (
+	"id" UUID NOT NULL,
+	"key_code" VARCHAR(64) NOT NULL,
+	"target_email" VARCHAR(255) NOT NULL,
+	"created_by" UUID NOT NULL,
+	"used_by" UUID NULL DEFAULT NULL,
+	"is_used" BOOLEAN NOT NULL DEFAULT 'false',
+	"expires_at" TIMESTAMPTZ NOT NULL,
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	PRIMARY KEY ("id"),
+	UNIQUE INDEX "hospital_invitations_key_code_key" ("key_code"),
+	INDEX "idx_hospital_invitations_key_code" ("key_code"),
+	INDEX "idx_hospital_invitations_target_email" ("target_email"),
+	CONSTRAINT "hospital_invitations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE,
+	CONSTRAINT "hospital_invitations_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
+);
+
+-- Dumping data for table public.hospital_invitations: -1 rows
+/*!40000 ALTER TABLE "hospital_invitations" DISABLE KEYS */;
+REPLACE INTO "hospital_invitations" ("id", "key_code", "target_email", "created_by", "used_by", "is_used", "expires_at", "created_at", "updated_at") VALUES
+	('68140ec5-cf68-4911-9bac-361b9b8b123f', 'AKESA-UAMZ-76ZU', 'kitaakanterbakar@yopmail.com', 'c462e808-6c73-4f69-a9a3-d7a1192a237a', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'true', '2026-10-20 12:00:09.047362+00', '2026-10-17 12:00:09.047362+00', '2026-10-17 12:21:35.56741+00'),
+	('639a2167-79fb-4fea-a15a-b683587ac911', 'AKESA-CEC6-LLUF', 'serapuhlarik@yopmail.com', 'c462e808-6c73-4f69-a9a3-d7a1192a237a', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'true', '2026-10-20 13:40:56.177092+00', '2026-10-17 13:40:56.177092+00', '2026-10-17 13:47:44.251895+00');
+/*!40000 ALTER TABLE "hospital_invitations" ENABLE KEYS */;
 
 -- Dumping structure for table public.hospital_staff
 CREATE TABLE IF NOT EXISTS "hospital_staff" (
@@ -155,7 +256,8 @@ CREATE TABLE IF NOT EXISTS "hospital_staff" (
 -- Dumping data for table public.hospital_staff: -1 rows
 /*!40000 ALTER TABLE "hospital_staff" DISABLE KEYS */;
 REPLACE INTO "hospital_staff" ("id", "user_id", "hospital_id", "full_name", "position", "created_at", "updated_at") VALUES
-	('93233718-c615-48a5-b16a-3c9767323227', '76568a30-17db-40ee-a4a3-04af16793773', '85ce395a-541c-431d-b371-9286a86f6386', 'Bala Lazuardi', 'Petugas Pendaftaran', '2026-09-12 12:05:37.538202+00', '2026-09-12 12:05:37.538202+00');
+	('93233718-c615-48a5-b16a-3c9767323227', '76568a30-17db-40ee-a4a3-04af16793773', '85ce395a-541c-431d-b371-9286a86f6386', 'Bala Lazuardi', 'Petugas Pendaftaran', '2026-09-12 12:05:37.538202+00', '2026-09-12 12:05:37.538202+00'),
+	('f28f474a-f8ee-4ea1-a491-4f4e9ec06cd8', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'e17505a0-3a14-44a6-8ccd-b0ae387dd60d', 'Lidah Berduri', 'Ketua Suku', '2026-10-17 13:48:44.07238+00', '2026-10-17 13:48:44.07238+00');
 /*!40000 ALTER TABLE "hospital_staff" ENABLE KEYS */;
 
 -- Dumping structure for table public.identity_verifications
@@ -196,8 +298,54 @@ CREATE TABLE IF NOT EXISTS "identity_verifications" (
 /*!40000 ALTER TABLE "identity_verifications" DISABLE KEYS */;
 REPLACE INTO "identity_verifications" ("id", "patient_id", "status", "document_type", "document_storage_key", "extracted_nik", "extracted_full_name", "extracted_date_of_birth", "extracted_gender", "document_status", "liveness_status", "face_match_status", "face_match_score", "provider", "provider_reference", "failure_reason", "verified_at", "expires_at", "created_at", "updated_at", "selfie_storage_key") VALUES
 	('05ebea76-4a78-433b-acc4-b09c13f0d125', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'EXPIRED', 'KTP', 'identity/c6acab0f-8506-4f72-8a82-e19be15de335/05ebea76-4a78-433b-acc4-b09c13f0d125/0b208ae6-a370-4229-8de3-4b105e194cb6.jpg', NULL, NULL, NULL, NULL, NULL, 'MANUAL_REVIEW', NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-29 13:59:11.12121+00', '2026-09-29 13:44:11.246665+00', '2026-10-01 12:24:06.532567+00', 'identity/c6acab0f-8506-4f72-8a82-e19be15de335/05ebea76-4a78-433b-acc4-b09c13f0d125/selfie/b52e7c0b-8f75-492a-b9fe-5c3b41b22f43.jpg'),
-	('4811e3d3-eab7-451d-8eae-961b9919a4f9', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'PENDING', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-08 10:49:25.058573+00', '2026-10-08 10:34:27.291143+00', '2026-10-08 10:34:27.291143+00', NULL);
+	('ead79621-0d09-4b09-a526-644e8582b513', 'c497174e-2617-4b40-9869-80e4b778486e', 'EXPIRED', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-17 10:24:20.144706+00', '2026-10-17 10:08:42.833287+00', '2026-10-17 11:44:31.926286+00', NULL),
+	('4811e3d3-eab7-451d-8eae-961b9919a4f9', 'c6acab0f-8506-4f72-8a82-e19be15de335', 'EXPIRED', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-08 10:49:25.058573+00', '2026-10-08 10:34:27.291143+00', '2026-10-17 12:51:13.776638+00', NULL),
+	('17d363e7-7897-485e-a23d-f875345df24d', 'b5cdf64e-f915-41f0-8de1-c8669dbb491d', 'PENDING', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-21 15:44:20.543366+00', '2026-10-21 15:29:20.323872+00', '2026-10-21 15:29:20.323872+00', NULL),
+	('9f15c95c-7ee2-4e3d-93f5-eb29c765e63c', '8c8278e0-0328-4af9-8870-b2bddaf3a715', 'EXPIRED', 'KTP', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-21 16:46:20.921481+00', '2026-10-21 16:31:20.682431+00', '2026-10-21 16:50:56.672943+00', NULL),
+	('6694be18-432a-492a-b802-f570f05b1f1a', '32bd2ed5-1904-4bed-877c-932d93ec1cd3', 'EXPIRED', 'KTP', 'identity/32bd2ed5-1904-4bed-877c-932d93ec1cd3/6694be18-432a-492a-b802-f570f05b1f1a/0805371d-f950-469e-9a3f-1694b833265e.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-20 16:14:25.152424+00', '2026-10-20 15:58:46.41792+00', '2026-10-21 18:21:13.807038+00', NULL);
 /*!40000 ALTER TABLE "identity_verifications" ENABLE KEYS */;
+
+-- Dumping structure for table public.notifications
+CREATE TABLE IF NOT EXISTS "notifications" (
+	"id" UUID NOT NULL,
+	"user_id" UUID NOT NULL,
+	"title" VARCHAR(255) NOT NULL,
+	"message" TEXT NOT NULL,
+	"category" UNKNOWN NOT NULL DEFAULT 'SYSTEM',
+	"severity" UNKNOWN NOT NULL DEFAULT 'INFO',
+	"is_read" BOOLEAN NOT NULL DEFAULT 'false',
+	"action_url" VARCHAR(255) NULL DEFAULT NULL,
+	"metadata" JSONB NOT NULL DEFAULT '{}',
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	"read_at" TIMESTAMPTZ NULL DEFAULT NULL,
+	PRIMARY KEY ("id"),
+	INDEX "idx_notifications_user_created" ("user_id", "created_at"),
+	INDEX "idx_notifications_user_unread" ("user_id"),
+	CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
+);
+
+-- Dumping data for table public.notifications: -1 rows
+/*!40000 ALTER TABLE "notifications" DISABLE KEYS */;
+REPLACE INTO "notifications" ("id", "user_id", "title", "message", "category", "severity", "is_read", "action_url", "metadata", "created_at", "read_at") VALUES
+	('264caf88-9468-44df-a0d2-e59682991966', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "apa ini masih ada ?", "requestId": "d5385ff0-05e2-41dc-bbd1-b0299318c82d", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-17 13:56:58.685151+00', '2026-10-22 01:12:14.516986+00'),
+	('09d5d349-b99c-4a8b-a675-5f61fa198c26', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "nego 10k", "requestId": "66437ace-105e-4914-9e46-07dcf20ec31d", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-17 13:52:32.384647+00', '2026-10-22 01:32:13.323648+00'),
+	('46033e46-7c31-4fe7-aa51-06301bebbeff', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "kelas", "requestId": "7d678b60-5d32-4dc4-ab35-3739f5e2e847", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 01:39:51.169492+00', '2026-10-22 02:25:17.351369+00'),
+	('6262aff3-5105-4655-a7ef-d84b0b5d7945', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Ditolak', 'Pasien telah menolak permintaan akses rekam medis.', 'ACCESS_REQUEST', 'WARNING', 'true', '/hospital/access-requests', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "7d678b60-5d32-4dc4-ab35-3739f5e2e847"}', '2026-10-22 02:25:07.474596+00', '2026-10-22 02:42:52.583059+00'),
+	('553cd522-a305-46a1-b64e-67a67e108f97', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Ditolak', 'Pasien telah menolak permintaan akses rekam medis.', 'ACCESS_REQUEST', 'WARNING', 'true', '/hospital/access-requests', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "c69f97e0-060b-47bb-b4e3-a6a9c63066dd"}', '2026-10-22 02:41:20.589159+00', '2026-10-22 02:42:52.583059+00'),
+	('ea14ba0b-f25b-4358-81e2-54fb50efc756', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Disetujui', 'Pasien telah menyetujui permintaan akses rekam medis.', 'ACCESS_REQUEST', 'INFO', 'true', '/hospital/access-requests/087b7f1c-302b-4ee7-8c00-264f16b89fc4/data', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "087b7f1c-302b-4ee7-8c00-264f16b89fc4"}', '2026-10-22 02:42:22.061001+00', '2026-10-22 02:42:52.583059+00'),
+	('cbaf457e-b857-47de-a272-bc3c30ab883f', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "bisa laa", "requestId": "c69f97e0-060b-47bb-b4e3-a6a9c63066dd", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 02:25:56.287005+00', '2026-10-22 03:40:08.507931+00'),
+	('ab3c2444-fd2d-43a1-b469-7119b7cccd75', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis (TEST)', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda. (Tes Notifikasi Firebase)', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "Pemeriksaan Poli Umum (Tes Notifikasi Real-time)", "requestId": "67335035-b0b1-47b7-903d-2b08c5603e88", "hospitalId": "54ef7bfe-408a-4868-b600-6199d2eedf26"}', '2026-10-22 02:33:34.294872+00', '2026-10-22 03:40:08.507931+00'),
+	('c0f545bd-0c25-46b4-aedf-9ffe0193b0bc', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis (TEST)', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda. (Tes Notifikasi Firebase)', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "Pemeriksaan Poli Umum (Tes Notifikasi Real-time)", "requestId": "2d3ffe71-ad14-4def-91c0-c1880f9a47fa", "hospitalId": "30a4d16e-6c2e-4433-a5f7-ca912a4bf5ec"}', '2026-10-22 02:34:09.256489+00', '2026-10-22 03:40:08.507931+00'),
+	('07f4126d-c263-46ba-a38c-6ffbd561e2ad', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis (TEST)', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda. (Tes Notifikasi Firebase)', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "Pemeriksaan Poli Umum (Tes Notifikasi Real-time)", "requestId": "968bf6a7-d349-4006-98a0-c9eaf37438d6", "hospitalId": "424af5d3-d8a5-487e-bc70-1e0cb95b64a0"}', '2026-10-22 02:34:37.317499+00', '2026-10-22 03:40:08.507931+00'),
+	('e5dc8f38-7121-4b63-ae71-fa899000e14b', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis (TEST)', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda. (Tes Notifikasi Firebase)', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "Pemeriksaan Poli Umum (Tes Notifikasi Real-time)", "requestId": "243b84c1-bfbc-4e0e-bd46-060ec9680ff5", "hospitalId": "77dcae7d-4c6e-4649-ac48-58a960df7104"}', '2026-10-22 02:36:21.820042+00', '2026-10-22 03:40:08.507931+00'),
+	('ff7855a2-2e4c-48b9-b021-0fd07a37943e', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "angin selalu mencintai mu", "requestId": "087b7f1c-302b-4ee7-8c00-264f16b89fc4", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 02:41:59.399225+00', '2026-10-22 03:40:08.507931+00'),
+	('f1d89f4b-9e41-4c8a-a518-52df6931028e', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Ditolak', 'Pasien telah menolak permintaan akses rekam medis.', 'ACCESS_REQUEST', 'WARNING', 'true', '/hospital/access-requests', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "b74fb6db-7360-478b-9ab1-9873c40aa362"}', '2026-10-22 03:41:34.171038+00', '2026-10-22 03:41:41.719434+00'),
+	('7ebb360a-f0ec-4b9e-8ede-a6b2d52b604e', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "minta dong", "requestId": "b74fb6db-7360-478b-9ab1-9873c40aa362", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 03:41:02.959935+00', '2026-10-22 03:41:46.026071+00'),
+	('3376e32b-7277-432b-9b72-5195e31910a5', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Ditolak', 'Pasien telah menolak permintaan akses rekam medis.', 'ACCESS_REQUEST', 'WARNING', 'false', '/hospital/access-requests', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "4c9183cc-0a02-4040-8112-f2ac1e95215b"}', '2026-10-22 03:56:51.305376+00', NULL),
+	('006cb5ea-86db-4dc3-ba5b-ca2866cfb42a', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "maaf jika banyak bertanya", "requestId": "4c9183cc-0a02-4040-8112-f2ac1e95215b", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 03:42:20.474023+00', '2026-10-22 03:57:27.21494+00'),
+	('bc4dd7e2-ecfe-4629-9ba7-aba031373fd6', '4735141b-6c04-4df4-8312-d61b351eea9d', 'Permintaan Izin Akses Rekam Medis', 'Sebuah rumah sakit meminta izin untuk mengakses rekam medis Anda.', 'ACCESS_REQUEST', 'INFO', 'true', '/patient/access-requests', '{"purpose": "ga sopan lu ye amjng", "requestId": "3b7561cd-c875-4935-91fd-7d786fb63f66", "hospitalId": "e17505a0-3a14-44a6-8ccd-b0ae387dd60d"}', '2026-10-22 03:57:14.317199+00', '2026-10-22 03:57:27.21494+00'),
+	('565c46a6-df82-4377-a55c-360b0b354191', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'Permintaan Akses Disetujui', 'Pasien telah menyetujui permintaan akses rekam medis.', 'ACCESS_REQUEST', 'INFO', 'false', '/hospital/access-requests/3b7561cd-c875-4935-91fd-7d786fb63f66/data', '{"patientId": "32bd2ed5-1904-4bed-877c-932d93ec1cd3", "requestId": "3b7561cd-c875-4935-91fd-7d786fb63f66"}', '2026-10-22 03:57:33.225393+00', NULL);
+/*!40000 ALTER TABLE "notifications" ENABLE KEYS */;
 
 -- Dumping structure for table public.patient_profiles
 CREATE TABLE IF NOT EXISTS "patient_profiles" (
@@ -212,13 +360,15 @@ CREATE TABLE IF NOT EXISTS "patient_profiles" (
 	"address" TEXT NOT NULL,
 	"blood_type" VARCHAR(5) NULL DEFAULT NULL,
 	"insurance_number" TEXT NULL DEFAULT NULL,
-	"emergency_contact_name" VARCHAR(255) NULL DEFAULT NULL,
-	"emergency_contact_phone" VARCHAR(30) NULL DEFAULT NULL,
+	"emergency_contact_name" TEXT NULL DEFAULT NULL,
+	"emergency_contact_phone" TEXT NULL DEFAULT NULL,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
 	"nik_hash" VARCHAR(64) NOT NULL,
 	"drug_allergy" TEXT NULL DEFAULT NULL,
 	"medical_history" TEXT NULL DEFAULT NULL,
+	"identity_verification_status" TEXT NULL DEFAULT 'NOT_VERIFIED',
+	"profile_completed" BOOLEAN NULL DEFAULT 'false',
 	PRIMARY KEY ("id"),
 	UNIQUE INDEX "patient_profiles_user_id_key" ("user_id"),
 	UNIQUE INDEX "patient_profiles_patient_code_key" ("patient_code"),
@@ -231,8 +381,13 @@ CREATE TABLE IF NOT EXISTS "patient_profiles" (
 
 -- Dumping data for table public.patient_profiles: -1 rows
 /*!40000 ALTER TABLE "patient_profiles" DISABLE KEYS */;
-REPLACE INTO "patient_profiles" ("id", "user_id", "patient_code", "full_name", "nik", "date_of_birth", "gender", "phone_number", "address", "blood_type", "insurance_number", "emergency_contact_name", "emergency_contact_phone", "created_at", "updated_at", "nik_hash", "drug_allergy", "medical_history") VALUES
-	('c6acab0f-8506-4f72-8a82-e19be15de335', '40551d73-8ad5-43f4-a4dd-c44f046718d0', 'AKS-dca183a1', 'Bala Lazuardi', 'vJpL/mAIhiFpv6pBd0vhuoyyJNgTFj6+sBNZEO0Duybf3Ip3Sd2nmaC6ozA=', '1998-06-12', 'MALE', '081234567890', 'Jl. Telekomunikasi, Bandung', NULL, NULL, NULL, NULL, '2026-09-22 13:54:45.41624+00', '2026-10-08 06:20:14.963843+00', '1ce6d61b4be8574dca383e02e5962f5a8ea0dc72d85d9e7e13fe3aac661b0754', NULL, NULL);
+REPLACE INTO "patient_profiles" ("id", "user_id", "patient_code", "full_name", "nik", "date_of_birth", "gender", "phone_number", "address", "blood_type", "insurance_number", "emergency_contact_name", "emergency_contact_phone", "created_at", "updated_at", "nik_hash", "drug_allergy", "medical_history", "identity_verification_status", "profile_completed") VALUES
+	('c6acab0f-8506-4f72-8a82-e19be15de335', '40551d73-8ad5-43f4-a4dd-c44f046718d0', 'AKS-dca183a1', 'Bala Lazuardi', 'vJpL/mAIhiFpv6pBd0vhuoyyJNgTFj6+sBNZEO0Duybf3Ip3Sd2nmaC6ozA=', '1998-06-12', 'MALE', '081234567890', 'Jl. Telekomunikasi, Bandung', NULL, NULL, NULL, NULL, '2026-09-22 13:54:45.41624+00', '2026-10-08 06:20:14.963843+00', '1ce6d61b4be8574dca383e02e5962f5a8ea0dc72d85d9e7e13fe3aac661b0754', NULL, NULL, 'VERIFIED', 'true'),
+	('c497174e-2617-4b40-9869-80e4b778486e', 'c673f68f-10a2-4792-a4b2-3109d866e4fe', 'AKS-26c96248', 'Lidah Berduri', '+2/yReDoswNaCjw22H+9byAdIXWdIYYF7VPs6EUR8rz5N81WZQi15FR6Ep0=', '2006-01-19', 'MALE', '081238198212', 'jl hujan orang mati no 3', 'A+', NULL, NULL, NULL, '2026-10-17 09:38:24.964553+00', '2026-10-17 10:05:47.31761+00', 'cee95f043da7bfa74c6b4013ee2728917be0535fc9b3444292754ea5de58a9d3', 'qcIindxEOuHS4pajswROESnUHWjbusWznlhTLf9Wlg==', 'PgFchxANpif+LMEeLQev0FNtuWL0dyUzidR2QoNKHA4muI6B7VA=', 'VERIFIED', 'true'),
+	('8c8278e0-0328-4af9-8870-b2bddaf3a715', 'dd740439-4db2-4bb5-a399-8f19fe8963c9', 'AKS-40e07ab9', 'SUTOMO', 'n4f0ladoqud6WT74PaSNiUJcphMZyx+aH++Mu1ilgf5hnSzicLGbcqeGIK8=', '1981-04-12', 'MALE', '083150751937', 'JL.BERUANG NO2, RT/RW 001/002, Kec. CIPUTAT', 'A+', 'XNUhSSB4cl/SH4DeTSGwzYy7x48Jn/MfeoHe73u5sj/fYSMDJlO24Qk=', NULL, NULL, '2026-10-21 16:25:51.57498+00', '2026-10-21 16:52:18.685793+00', '58d3fbc250951e83da7362147b1dff5f9731263a772776c80bf4fa1cdb592c5c', 'Q7ho/xQ6jmBdQuXzPGULArgxJtjlr1iTbc1eCus93Hlt9k6hb2dGgelmg1d0h6XRow==', 'qch8jIPmjzZKtGm0srLRbaKiwtk6vbRhcgrfsftWXJ6ATrAhc45PgjbMi26Qjpv0jxXMJy0vlDvpfqreUw==', 'NOT_VERIFIED', 'false'),
+	('b5cdf64e-f915-41f0-8de1-c8669dbb491d', '3bb61629-9b8d-4d43-80e8-eec71cb3da15', 'AKS-5d090565', 'Tama Alexander', 'xySCuuVfDDHpfW5+n/DdIn696Va7OdJiF6yYo65aP245XecGnsYkGL6UOiQ=', '2006-01-24', 'MALE', '08111655565', 'Kalianda', 'O+', NULL, NULL, NULL, '2026-10-21 15:20:52.884281+00', '2026-10-21 15:25:39.393723+00', 'f7f01c059fafc6438d141787ff2db6ce192e232ea10d779318808f846288b5e2', NULL, NULL, 'NOT_VERIFIED', 'false'),
+	('a5c0e1dd-f4fe-449c-81c8-4b4ed01d6a58', '25c6b317-38b3-4105-97ff-a29039c31918', 'AKS-efa1cbda', 'Siti Aminah', 'kalZe9eYcEBkxaUbj3D+o3qKhlf1uOIyZv5ijwPiomxwqxvru5R4sKcGi4o=', '1999-05-15', 'FEMALE', '081234567890', 'Jl. Melati No. 10, Kecamatan Coblong, Kota Bandung', 'O+', 'o2wp80CRZ2J9MckWyu4nG9oyvmcVg9eoMhKCHtqBZa5ZUUuEnUpHkyU=', 'rJ04pqF7f6+76BnnwECLxyL/OTJrzgiCGuHO3GThrSknGFmm5Iac1Os=', 'JXdxEkfGg8FRQH9AHQCbP1oUH/636GrLCwO+VJXbMe3uxto535vvjA==', '2026-10-21 16:55:38.417925+00', '2026-10-21 17:38:44.839055+00', '72b1028a84f519e30f67c7a32b9936f1a66bdcf6cb79c4dfd3df2f1bfc584fd1', 'egry4l1k6e/7iVv6uJbl7nztobR6nEWjM9JkRldrhZU8UKsy6cl9UDy6LrGxS95bUdGhXeA=', 'd2tbaFsJjdRrnW+jQGAFktihE1CvPf394D+cld/jWCR2Cg5eHbPWC3z8n30=', 'NOT_VERIFIED', 'false'),
+	('32bd2ed5-1904-4bed-877c-932d93ec1cd3', '4735141b-6c04-4df4-8312-d61b351eea9d', 'AKS-87b49af3', 'YAZIDUL FAHIMI', 'WZ03XnA0A3S6EERMWtiP0r1tgRGxOroB3KrWQrnt9bbYLm7UHwbJj3srZ04=', '1992-10-12', 'MALE', '0810293011123', 'PULAUTIDUNG, RT/RW 005/002, Kel. PULAUTIDUNG, Kec. KEPULAUANSERIBUSELATAN', NULL, NULL, NULL, NULL, '2026-10-20 15:58:35.512361+00', '2026-10-22 04:18:29.94343+00', '21e9b240dcd67787ac901a021ad65452c372f83d5f9acf4a9884d3963b6276d3', NULL, NULL, 'NOT_VERIFIED', 'false');
 /*!40000 ALTER TABLE "patient_profiles" ENABLE KEYS */;
 
 -- Dumping structure for table public.patient_qr_credentials
@@ -269,7 +424,7 @@ CREATE TABLE IF NOT EXISTS "schema_migrations" (
 -- Dumping data for table public.schema_migrations: -1 rows
 /*!40000 ALTER TABLE "schema_migrations" DISABLE KEYS */;
 REPLACE INTO "schema_migrations" ("version", "dirty") VALUES
-	(8, 'false');
+	(13, 'false');
 /*!40000 ALTER TABLE "schema_migrations" ENABLE KEYS */;
 
 -- Dumping structure for table public.users
@@ -289,8 +444,34 @@ CREATE TABLE IF NOT EXISTS "users" (
 REPLACE INTO "users" ("id", "clerk_user_id", "role", "status", "created_at", "updated_at") VALUES
 	('76a3916b-ebf3-4221-8c30-60b646b8cc47', 'user_3IRmuwqtYLPkOaHzI2N6OX2QtsB', 'ADMIN', 'ACTIVE', '2026-09-12 11:21:38.431286+00', '2026-09-12 11:21:38.431286+00'),
 	('40551d73-8ad5-43f4-a4dd-c44f046718d0', 'user_3IaWnMdZ4ZX8DTeFYHEXvwyHb9u', 'PATIENT', 'ACTIVE', '2026-09-12 11:26:20.672214+00', '2026-09-12 11:26:20.672214+00'),
-	('76568a30-17db-40ee-a4a3-04af16793773', 'user_3IaWzgsGnLN5L0xcHnJFxTlrlVs', 'HOSPITAL_STAFF', 'ACTIVE', '2026-09-12 11:30:25.693088+00', '2026-09-12 12:05:37.727098+00');
+	('76568a30-17db-40ee-a4a3-04af16793773', 'user_3IaWzgsGnLN5L0xcHnJFxTlrlVs', 'HOSPITAL_STAFF', 'ACTIVE', '2026-09-12 11:30:25.693088+00', '2026-09-12 12:05:37.727098+00'),
+	('dd740439-4db2-4bb5-a399-8f19fe8963c9', 'user_3KobXQ8X3M2BgVUi3cSGamb0mLo', 'PATIENT', 'ACTIVE', '2026-10-17 08:48:30.967556+00', '2026-10-17 08:48:30.967556+00'),
+	('c462e808-6c73-4f69-a9a3-d7a1192a237a', 'user_3JSY6gOClbCFsaZu6onCHS491T2', 'ADMIN', 'ACTIVE', '2026-10-17 11:57:08.217688+00', '2026-10-17 11:57:08.217688+00'),
+	('c673f68f-10a2-4792-a4b2-3109d866e4fe', 'user_3KodyuELM4yg6rV9spgefWcP6It', 'HOSPITAL_STAFF', 'ACTIVE', '2026-10-17 09:21:11.21437+00', '2026-10-17 13:48:45.108706+00'),
+	('4735141b-6c04-4df4-8312-d61b351eea9d', 'user_3KmN9FYVN6N2J2AQf4ZjVK76O6J', 'PATIENT', 'ACTIVE', '2026-10-17 13:54:49.078247+00', '2026-10-17 13:54:49.078247+00'),
+	('3bb61629-9b8d-4d43-80e8-eec71cb3da15', 'user_3L0fF3ucobQ9cfdD0DcL93VhCbB', 'PATIENT', 'ACTIVE', '2026-10-21 15:16:46.659727+00', '2026-10-21 15:16:46.659727+00'),
+	('25c6b317-38b3-4105-97ff-a29039c31918', 'user_3L0r4nY3GSLwVPK37qO545ONeDI', 'PATIENT', 'ACTIVE', '2026-10-21 16:53:59.236636+00', '2026-10-21 16:53:59.236636+00');
 /*!40000 ALTER TABLE "users" ENABLE KEYS */;
+
+-- Dumping structure for table public.user_device_tokens
+CREATE TABLE IF NOT EXISTS "user_device_tokens" (
+	"id" UUID NOT NULL,
+	"user_id" UUID NOT NULL,
+	"token" TEXT NOT NULL,
+	"platform" VARCHAR(20) NOT NULL DEFAULT 'android',
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+	PRIMARY KEY ("id"),
+	UNIQUE INDEX "user_device_tokens_token_key" ("token"),
+	INDEX "idx_user_device_tokens_user" ("user_id"),
+	CONSTRAINT "user_device_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
+);
+
+-- Dumping data for table public.user_device_tokens: -1 rows
+/*!40000 ALTER TABLE "user_device_tokens" DISABLE KEYS */;
+REPLACE INTO "user_device_tokens" ("id", "user_id", "token", "platform", "created_at", "updated_at") VALUES
+	('2ae11d9d-388c-4cdf-8d27-ceff3cbbe73b', '4735141b-6c04-4df4-8312-d61b351eea9d', 'fnghJvM8RKW4XhZBMuJFeR:APA91bH9i5juTeC0ZdKYcnpzKPgg6_cS2QmvXqib3hJH3iV9enuqhLCkdEd9fmggjtGFRqdtNIezIBE60qUjjkW43RpTC53TFaj4OxJz1DcdoirelfY8_9s', 'android', '2026-10-22 01:06:44.857295+00', '2026-10-22 04:43:59.386201+00');
+/*!40000 ALTER TABLE "user_device_tokens" ENABLE KEYS */;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

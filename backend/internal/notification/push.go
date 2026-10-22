@@ -57,11 +57,20 @@ func NewFirebasePushClient(ctx context.Context, credFilePath string) (PushClient
 	}
 
 	if resolvedPath == "" {
-		candidates := []string{"serviceAccountKey.json"}
+		candidates := []string{
+			"serviceAccountKey.json",
+			"config/serviceAccountKey.json",
+		}
 		if matches, _ := filepath.Glob("*firebase-adminsdk*.json"); len(matches) > 0 {
 			candidates = append(candidates, matches...)
 		}
+		if matches, _ := filepath.Glob("config/*firebase-adminsdk*.json"); len(matches) > 0 {
+			candidates = append(candidates, matches...)
+		}
 		if matches, _ := filepath.Glob("*adminsdk*.json"); len(matches) > 0 {
+			candidates = append(candidates, matches...)
+		}
+		if matches, _ := filepath.Glob("config/*adminsdk*.json"); len(matches) > 0 {
 			candidates = append(candidates, matches...)
 		}
 		for _, c := range candidates {

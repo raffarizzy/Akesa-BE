@@ -1,7 +1,15 @@
 # --- SEMENTARA MENGGUNAKAN IP ---
-# Mendengarkan port 80 untuk akses langsung via IP VPS (http://202.155.17.79)
+# Mendengarkan port 80 untuk akses langsung via IP VPS (misal: http://202.155.17.79)
 :80 {
-    reverse_proxy akesa-backend:8080
+    # 1. Routing KTP OCR Gateway (agar frontend bisa akses via URL yang sama)
+    handle /api/v1/ktp/* {
+        reverse_proxy akesa-ocr-backend:8081
+    }
+
+    # 2. Routing Backend Utama (REST API & Real-time WebSocket)
+    handle {
+        reverse_proxy akesa-backend:8080
+    }
 
     log {
         output stdout
@@ -10,9 +18,14 @@
 }
 
 # --- KETIKA DNS DOMAIN SUDAH AKTIF ---
-# Cukup ganti blok di atas dengan domain Anda di bawah ini,
-# Caddy akan otomatis mengurus sertifikat SSL HTTPS (Let's Encrypt):
+# Caddy otomatis mengurus sertifikat SSL HTTPS (Let's Encrypt).
+# Cukup ganti :80 di atas dengan domain Anda (misal api.akesa.cloud)
 #
 # api.akesa.cloud {
-#     reverse_proxy akesa-backend:8080
+#     handle /api/v1/ktp/* {
+#         reverse_proxy akesa-ocr-backend:8081
+#     }
+#     handle {
+#         reverse_proxy akesa-backend:8080
+#     }
 # }

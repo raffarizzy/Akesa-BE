@@ -311,3 +311,67 @@ func computeHash(
 	h.Write([]byte(ts.Format(time.RFC3339Nano)))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+type PatientProfileHashRecord struct {
+	PatientID   uuid.UUID
+	ProfileHash string
+}
+
+type DecidedRequestRecord struct {
+	RequestID  uuid.UUID
+	PatientID  uuid.UUID
+	HospitalID uuid.UUID
+	Status     string
+}
+
+func (r *Repository) ListAllLatestProfileHashes(ctx context.Context) ([]PatientProfileHashRecord, error) {
+	rows, err := r.db.Query(
+		ctx,
+		`SELECT DISTINCT ON (entity_id) entity_id, payload->>'profileHash'
+		 FROM audit_logs
+		 WHERE entity_type = 'PATIENT_PROFILE' 
+		   AND action = $1
+		   AND payload->>'profileHash' IS NOT NULL 
+		   AND payload->>'profileHash' != ''
+		 ORDER BY entity_id, created_at DESC`,
+		ActionProfileUpdated,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query all latest profile hashes: %w", err)
+	}
+	defer rows.Close()
+
+	var records []PatientProfileHashRecord
+	for rows.Next() {
+		var rec PatientProfileHashRecord
+		if err := rows.Scan(&rec.PatientID, &rec.ProfileHash); err != nil {
+			return nil, fmt.Errorf("scan profile hash record: %w", err)
+		}
+		records = append(records, rec)
+	}
+	return records, rows.Err()
+}
+
+func (r *Repository) ListDecidedAccessRequests(ctx context.Context) ([]DecidedRequestRecord, error) {
+	rows, err := r.db.Query(
+		ctx,
+		`SELECT id, patient_id, hospital_id, status
+		 FROM access_requests
+		 WHERE status IN ('APPROVED', 'REJECTED', 'REVOKED')
+		 ORDER BY created_at ASC`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query decided access requests: %w", err)
+	}
+	defer rows.Close()
+
+	var records []DecidedRequestRecord
+	for rows.Next() {
+		var rec DecidedRequestRecord
+		if err := rows.Scan(&rec.RequestID, &rec.PatientID, &rec.HospitalID, &rec.Status); err != nil {
+			return nil, fmt.Errorf("scan decided request record: %w", err)
+		}
+		records = append(records, rec)
+	}
+	return records, rows.Err()
+}

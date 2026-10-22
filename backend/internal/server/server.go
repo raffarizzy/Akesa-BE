@@ -1,4 +1,4 @@
-﻿package server
+package server
 
 import (
 	"net/http"
@@ -59,6 +59,7 @@ func (s *Server) registerRoutes(deps Dependencies) {
 	s.mux.HandleFunc("GET /{$}", rootHandler)
 	s.mux.HandleFunc("GET /health", healthHandler)
 	s.mux.HandleFunc("GET /api/v1/audit/verify-chain", deps.AuditHandler.VerifyChain)
+	s.mux.HandleFunc("POST /api/v1/audit/sync-chain", deps.AuditHandler.SyncChain)
 
 	s.mux.Handle("POST /api/v1/users/sync", auth.RequireAuth(http.HandlerFunc(deps.UserHandler.Sync)))
 	s.mux.Handle("GET /api/v1/me", auth.RequireAuth(http.HandlerFunc(deps.UserHandler.Me)))

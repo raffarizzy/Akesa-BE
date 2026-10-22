@@ -113,3 +113,20 @@ func (h *Handler) VerifyChain(w http.ResponseWriter, r *http.Request) {
 		"message":     "All SHA-256 block hashes verified and intact",
 	})
 }
+
+// SyncChain - POST /api/v1/audit/sync-chain
+// Manually triggers immediate synchronization of database audit records with the blockchain.
+func (h *Handler) SyncChain(w http.ResponseWriter, r *http.Request) {
+	result, err := h.service.SyncBlockchain(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]any{
+		"status":  "SYNCED",
+		"message": "Blockchain state successfully synchronized with database audit records",
+		"data":    result,
+	})
+}
+

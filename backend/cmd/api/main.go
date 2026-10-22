@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"context"
@@ -65,6 +65,8 @@ func main() {
 
 	auditRepository := audit.NewRepository(db)
 	auditService := audit.NewService(auditRepository, bcClient)
+	// Start background self-healing auto-sync worker for blockchain
+	auditService.StartSyncWorker(context.Background(), 30*time.Second)
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)

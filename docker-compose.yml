@@ -49,6 +49,29 @@ services:
     networks:
       - akesa-net
 
+  akesa-ocr-backend:
+    build:
+      context: ./ktp-ocr/backend
+      dockerfile: Dockerfile
+    container_name: akesa-ocr-backend
+    restart: unless-stopped
+    environment:
+      - PORT=8081
+      - AI_SERVICE_URL=http://akesa-ocr:8000
+      - TIMEOUT_SECONDS=60
+      - GIN_MODE=release
+    depends_on:
+      - akesa-ocr
+    ports:
+      - "9090:8081"
+      - "8081:8081"
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+    networks:
+      - akesa-net
+
   akesa-backend:
     build:
       context: ./backend
@@ -66,11 +89,12 @@ services:
       - ./backend/.env
     environment:
       - PORT=8080
-      - DATABASE_URL=postgresql://akesa:${DATABASE_PASSWORD:-akesa}@akesa-postgres:5432/akesa?sslmode=disable
+      - DATABASE_URL=${DATABASE_URL:-postgresql://akesa:${DATABASE_PASSWORD:-akesa}@akesa-postgres:5432/akesa?sslmode=disable}
       - BLOCKCHAIN_RPC_URL=http://akesa-blockchain:8545
       - BLOCKCHAIN_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
     volumes:
       - identity_storage:/app/storage/identity
+      - ./backend:/app/config:ro
     deploy:
       resources:
         limits:
@@ -91,6 +115,7 @@ services:
       - caddy_config:/config
     depends_on:
       - akesa-backend
+      - akesa-ocr-backend
     deploy:
       resources:
         limits:
@@ -106,4 +131,5 @@ volumes:
 
 networks:
   akesa-net:
+    name: akesa_akesa-net
     driver: bridge

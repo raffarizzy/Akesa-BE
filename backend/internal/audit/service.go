@@ -163,3 +163,118 @@ func (s *Service) GetLatestProfileHash(ctx context.Context, patientID uuid.UUID)
 	}
 	return payload["profileHash"], nil
 }
+
+type SyncResult struct {
+	ProfilesChecked int `json:"profilesChecked"`
+	ProfilesSynced  int `json:"profilesSynced"`
+	ConsentsChecked int `json:"consentsChecked"`
+	ConsentsSynced  int `json:"consentsSynced"`
+}
+
+// SyncBlockchain checks and recovers any missing profile hashes or consents on the blockchain.
+// This allows the blockchain to self-heal and re-synchronize after downtime or restarts.
+func (s *Service) SyncBlockchain(ctx context.Context) (*SyncResult, error) {
+	if s.bcClient == nil || !s.bcClient.IsEnabled() {
+		return nil, blockchain.ErrClientDisabled
+	}
+
+	result := &SyncResult{}
+
+	// 1. Sync Patient Profile Hashes (Krusial untuk verifikasi integritas FR-BC-04)
+	profiles, err := s.repository.ListAllLatestProfileHashes(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list profile hashes from db: %w", err)
+	}
+
+	result.ProfilesChecked = len(profiles)
+	for _, p := range profiles {
+		// Cek apakah hash profil sudah tercatat dan cocok di smart contract
+		isValid, recordedHash, err := s.bcClient.VerifyProfileHash(ctx, p.PatientID, p.ProfileHash)
+		if err != nil {
+			return nil, fmt.Errorf("blockchain node unreachable: %w", err)
+		}
+
+		if !isValid || recordedHash == "" {
+			log.Printf("[blockchain-sync] Patient %s hash missing on-chain (on-chain=%q vs db=%q). Re-anchoring...",
+				p.PatientID, recordedHash, p.ProfileHash)
+
+			txHash, err := s.bcClient.RecordProfileHash(ctx, p.PatientID, p.ProfileHash)
+			if err != nil {
+				return nil, fmt.Errorf("record profile hash for %s: %w", p.PatientID, err)
+			}
+			log.Printf("[blockchain-sync] Patient %s successfully re-anchored on-chain! txHash=%s", p.PatientID, txHash)
+			result.ProfilesSynced++
+		}
+	}
+
+	// 2. Sync Decided Consents (Approved / Rejected / Revoked)
+	decidedRequests, err := s.repository.ListDecidedAccessRequests(ctx)
+	if err == nil {
+		result.ConsentsChecked = len(decidedRequests)
+		for _, req := range decidedRequests {
+			var status uint8
+			switch req.Status {
+			case "APPROVED":
+				status = 2
+			case "REJECTED":
+				status = 3
+			case "REVOKED":
+				status = 4
+			}
+
+			if status > 0 {
+				_, err := s.bcClient.RecordConsent(ctx, req.RequestID, req.PatientID, req.HospitalID, status, "")
+				if err == nil {
+					result.ConsentsSynced++
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// StartSyncWorker runs a background loop that automatically re-anchors missing database
+// audit logs to the blockchain whenever the blockchain node comes back online.
+func (s *Service) StartSyncWorker(ctx context.Context, interval time.Duration) {
+	if s.bcClient == nil || !s.bcClient.IsEnabled() {
+		return
+	}
+
+	go func() {
+		log.Printf("[blockchain-sync] Background auto-sync worker started (interval: %v)", interval)
+
+		// Delay 5 detik di awal memberi waktu node EVM menyelesaikan booting/deploy
+		time.Sleep(5 * time.Second)
+		s.runSyncCycle(ctx)
+
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.runSyncCycle(ctx)
+			}
+		}
+	}()
+}
+
+func (s *Service) runSyncCycle(ctx context.Context) {
+	syncCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel()
+
+	result, err := s.SyncBlockchain(syncCtx)
+	if err != nil {
+		// Log info tenang tanpa panik saat node offline
+		log.Printf("[blockchain-sync] Node blockchain sedang offline atau belum siap (%v). Menunggu siklus berikutnya...", err)
+		return
+	}
+
+	if result.ProfilesSynced > 0 || result.ConsentsSynced > 0 {
+		log.Printf("[blockchain-sync] ✅ Auto-recovered & synchronized with blockchain: %d profile(s), %d consent(s)",
+			result.ProfilesSynced, result.ConsentsSynced)
+	}
+}
